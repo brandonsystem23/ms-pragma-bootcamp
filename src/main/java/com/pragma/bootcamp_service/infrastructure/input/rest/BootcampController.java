@@ -2,6 +2,7 @@ package com.pragma.bootcamp_service.infrastructure.input.rest;
 
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
+import com.pragma.bootcamp_service.application.dto.response.PagedBootcampResponse;
 import com.pragma.bootcamp_service.application.handler.IBootcampHandler;
 import com.pragma.bootcamp_service.infrastructure.util.UtilTokenExtractor;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +33,22 @@ public class BootcampController {
         String token = UtilTokenExtractor.extract(authorizationHeader);
 
         return iBootcampHandler.create(request, token);
+    }
+
+    @GetMapping("/list")
+    @Operation(summary = "Listar bootcamps", description = "Listar bootcamps paginadas. Requiere rol ADMINISTRADOR")
+    public Mono<PagedBootcampResponse> getBootcamps(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        log.info("Solicitud para listar bootcamps");
+
+        String token = UtilTokenExtractor.extract(authorizationHeader);
+
+        return iBootcampHandler.getBootcamps(page, size, sortBy, direction, token);
     }
 
 

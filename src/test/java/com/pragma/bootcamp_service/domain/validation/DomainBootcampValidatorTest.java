@@ -4,6 +4,7 @@ import com.pragma.bootcamp_service.domain.exception.DomainErrorCode;
 import com.pragma.bootcamp_service.domain.exception.DomainErrorMessages;
 import com.pragma.bootcamp_service.domain.exception.DomainException;
 import com.pragma.bootcamp_service.domain.model.command.BootcampCommand;
+import com.pragma.bootcamp_service.domain.model.command.BootcampPageCommand;
 import com.pragma.bootcamp_service.domain.validation.capability.DomainBootcampValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -283,6 +284,181 @@ class DomainBootcampValidatorTest {
         Assertions.assertEquals(
                 expectedMessage,
                 exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldPassWhenPaginationIsValid() {
+
+        BootcampPageCommand command = new BootcampPageCommand(
+                0,
+                10,
+                "name",
+                "asc"
+        );
+
+        Assertions.assertDoesNotThrow(() ->
+                domainBootcampValidator.validatePagination(command)
+        );
+    }
+
+    @Test
+    void shouldPassWhenPaginationUsesNumberTechnologiesAndDesc() {
+
+        BootcampPageCommand command = new BootcampPageCommand(
+                1,
+                20,
+                "numberCapabilities",
+                "desc"
+        );
+
+        Assertions.assertDoesNotThrow(() ->
+                domainBootcampValidator.validatePagination(command)
+        );
+    }
+
+    @Test
+    void shouldFailWhenPageIsNegative() {
+
+        BootcampPageCommand command = new BootcampPageCommand(
+                -1,
+                10,
+                "name",
+                "asc"
+        );
+
+        DomainException exception = Assertions.assertThrows(
+                DomainException.class,
+                () -> domainBootcampValidator.validatePagination(command)
+        );
+
+        Assertions.assertEquals(
+                DomainErrorCode.INVALID_PAGE,
+                exception.getCode()
+        );
+
+        Assertions.assertEquals(
+                DomainErrorMessages.INVALID_PAGE,
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldFailWhenSizeIsZero() {
+
+        BootcampPageCommand command = new BootcampPageCommand(
+                0,
+                0,
+                "name",
+                "asc"
+        );
+
+        DomainException exception = Assertions.assertThrows(
+                DomainException.class,
+                () -> domainBootcampValidator.validatePagination(command)
+        );
+
+        Assertions.assertEquals(
+                DomainErrorCode.INVALID_SIZE,
+                exception.getCode()
+        );
+
+        Assertions.assertEquals(
+                DomainErrorMessages.INVALID_SIZE,
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldFailWhenSizeIsNegative() {
+
+        BootcampPageCommand command = new BootcampPageCommand(
+                0,
+                -1,
+                "name",
+                "asc"
+        );
+
+        DomainException exception = Assertions.assertThrows(
+                DomainException.class,
+                () -> domainBootcampValidator.validatePagination(command)
+        );
+
+        Assertions.assertEquals(
+                DomainErrorCode.INVALID_SIZE,
+                exception.getCode()
+        );
+
+        Assertions.assertEquals(
+                DomainErrorMessages.INVALID_SIZE,
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldFailWhenSortByIsInvalid() {
+
+        BootcampPageCommand command = new BootcampPageCommand(
+                0,
+                10,
+                "description",
+                "asc"
+        );
+
+        DomainException exception = Assertions.assertThrows(
+                DomainException.class,
+                () -> domainBootcampValidator.validatePagination(command)
+        );
+
+        Assertions.assertEquals(
+                DomainErrorCode.INVALID_SORT_BY,
+                exception.getCode()
+        );
+
+        Assertions.assertEquals(
+                DomainErrorMessages.INVALID_SORT_BY,
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldFailWhenDirectionIsInvalid() {
+
+        BootcampPageCommand command = new BootcampPageCommand(
+                0,
+                10,
+                "name",
+                "invalid"
+        );
+
+        DomainException exception = Assertions.assertThrows(
+                DomainException.class,
+                () -> domainBootcampValidator.validatePagination(command)
+        );
+
+        Assertions.assertEquals(
+                DomainErrorCode.INVALID_DIRECTION,
+                exception.getCode()
+        );
+
+        Assertions.assertEquals(
+                DomainErrorMessages.INVALID_DIRECTION,
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldAcceptUppercaseDirection() {
+
+        BootcampPageCommand command = new BootcampPageCommand(
+                0,
+                10,
+                "name",
+                "ASC"
+        );
+
+        Assertions.assertDoesNotThrow(() ->
+                domainBootcampValidator.validatePagination(command)
         );
     }
 }

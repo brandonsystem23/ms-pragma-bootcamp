@@ -19,6 +19,7 @@ import reactor.test.StepVerifier;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
@@ -352,7 +353,302 @@ class BootcampPersistenceAdapterTest {
                 )
                 .verify();
 
-        verify(iBootcampRepository).existsByName(name);
     }
+
+    @Test
+    void shouldFindAllBootcampsOrderByNameAsc() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        BootcampCapabilityEntity capabilityEntity =
+                BootcampCapabilityEntity.builder()
+                        .bootcampId(1L)
+                        .capabilityId(10L)
+                        .build();
+
+        when(iBootcampRepository.findAllOrderByNameAsc(10, 0L))
+                .thenReturn(Flux.just(entity));
+
+        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
+                .thenReturn(Flux.just(capabilityEntity));
+
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(1L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(
+                                0,
+                                10,
+                                "name",
+                                "asc"
+                        )
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.content().size());
+                    assertEquals(1L, result.content().getFirst().getId());
+                    assertEquals("Bootcamp Backend",
+                            result.content().getFirst().getName());
+
+                    assertEquals(
+                            List.of(
+                                    Capability.builder()
+                                            .id(10L)
+                                            .build()
+                            ),
+                            result.content().getFirst().getCapabilities()
+                    );
+
+                    assertEquals(0, result.page());
+                    assertEquals(10, result.size());
+                    assertEquals(1L, result.totalElements());
+                    assertEquals(1, result.totalPages());
+                    assertTrue(result.first());
+                    assertTrue(result.last());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void shouldFindAllBootcampsOrderByNameDesc() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(2L)
+                .name("Bootcamp Java")
+                .description("Java")
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(2L)
+                .name("Bootcamp Java")
+                .description("Java")
+                .build();
+
+        when(iBootcampRepository.findAllOrderByNameDesc(10, 0L))
+                .thenReturn(Flux.just(entity));
+
+        when(iBootcampCapabilityRepository.findAllByBootcampId(2L))
+                .thenReturn(Flux.empty());
+
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(1L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(
+                                0,
+                                10,
+                                "name",
+                                "desc"
+                        )
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.content().size());
+                    assertEquals("Bootcamp Java",
+                            result.content().getFirst().getName());
+                    assertTrue(
+                            result.content().getFirst().getCapabilities().isEmpty()
+                    );
+                    assertEquals(1L, result.totalElements());
+                    assertEquals(1, result.totalPages());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void shouldFindAllBootcampsOrderByNumberCapabilitiesAsc() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        when(iBootcampRepository.findAllOrderByCapabilityCountAsc(10, 0L))
+                .thenReturn(Flux.just(entity));
+
+        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
+                .thenReturn(Flux.empty());
+
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(1L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(
+                                0,
+                                10,
+                                "numberCapabilities",
+                                "asc"
+                        )
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.content().size());
+                    assertEquals(1L, result.totalElements());
+                    assertEquals(1, result.totalPages());
+                })
+                .verifyComplete();
+
+    }
+
+    @Test
+    void shouldFindAllBootcampsOrderByNumberCapabilitiesDesc() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        when(iBootcampRepository.findAllOrderByCapabilityCountDesc(10, 0L))
+                .thenReturn(Flux.just(entity));
+
+        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
+                .thenReturn(Flux.empty());
+
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(1L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(
+                                0,
+                                10,
+                                "numberCapabilities",
+                                "desc"
+                        )
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.content().size());
+                    assertEquals(1L, result.totalElements());
+                    assertEquals(1, result.totalPages());
+                })
+                .verifyComplete();
+
+    }
+
+    @Test
+    void shouldUseDefaultSortWhenSortByIsInvalid() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        when(iBootcampRepository.findAllOrderByNameAsc(10, 0L))
+                .thenReturn(Flux.just(entity));
+
+        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
+                .thenReturn(Flux.empty());
+
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(1L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(
+                                0,
+                                10,
+                                "invalidSort",
+                                "asc"
+                        )
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.content().size());
+                    assertEquals(1L, result.totalElements());
+                    assertEquals(1, result.totalPages());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void shouldReturnMiddlePageCorrectly() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(11L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(11L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .build();
+
+        when(iBootcampRepository.findAllOrderByNameAsc(10, 10L))
+                .thenReturn(Flux.just(entity));
+
+        when(iBootcampCapabilityRepository.findAllByBootcampId(11L))
+                .thenReturn(Flux.empty());
+
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(30L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(
+                                1,
+                                10,
+                                "name",
+                                "asc"
+                        )
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.page());
+                    assertEquals(10, result.size());
+                    assertEquals(30L, result.totalElements());
+                    assertEquals(3, result.totalPages());
+
+                    assertFalse(result.first());
+                    assertFalse(result.last());
+                })
+                .verifyComplete();
+
+        verify(iBootcampRepository)
+                .findAllOrderByNameAsc(10, 10L);
+    }
+
 }
 

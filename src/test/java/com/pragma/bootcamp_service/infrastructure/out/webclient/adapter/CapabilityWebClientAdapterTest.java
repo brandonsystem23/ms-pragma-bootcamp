@@ -1,6 +1,9 @@
 package com.pragma.bootcamp_service.infrastructure.out.webclient.adapter;
 
+import com.pragma.bootcamp_service.domain.model.Capability;
 import com.pragma.bootcamp_service.infrastructure.exception.ExternalServiceException;
+import com.pragma.bootcamp_service.infrastructure.out.webclient.dto.CapabilityDetailResponse;
+import com.pragma.bootcamp_service.infrastructure.out.webclient.mapper.CapabilityMapper;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -15,14 +18,18 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class CapabilityWebClientAdapterTest {
 
     private MockWebServer mockWebServer;
     private CapabilityWebClientAdapter capabilityWebClientAdapter;
+    private CapabilityMapper capabilityMapper;
 
     @BeforeEach
     void setUp() throws IOException {
+
         mockWebServer = new MockWebServer();
         mockWebServer.start();
 
@@ -30,9 +37,13 @@ class CapabilityWebClientAdapterTest {
                 .baseUrl(mockWebServer.url("/").toString())
                 .build();
 
+        capabilityMapper = mock(CapabilityMapper.class);
+
         capabilityWebClientAdapter = new CapabilityWebClientAdapter(
                 capabilityWebClient,
-                "/api/v1/capability/exists-by-ids"
+                "/api/v1/capability/exists-by-ids",
+                "/api/v1/capability/by-ids",
+                capabilityMapper
         );
     }
 
@@ -294,6 +305,88 @@ class CapabilityWebClientAdapterTest {
 
             mockWebServer.enqueue(response);
         }
+    }
+
+    @Test
+    void shouldFindCapabilitiesByIdsSuccessfully() {
+
+        Capability capability1 = Capability.builder()
+                .id(1L)
+                .name("Programación")
+                .build();
+
+        Capability capability2 = Capability.builder()
+                .id(2L)
+                .name("Bases de datos")
+                .build();
+
+        CapabilityDetailResponse response1 =
+                CapabilityDetailResponse.builder()
+                        .id(1L)
+                        .name("Programación")
+                        .build();
+
+        CapabilityDetailResponse response2 =
+                CapabilityDetailResponse.builder()
+                        .id(2L)
+                        .name("Bases de datos")
+                        .build();
+
+        mockWebServer.enqueue(
+                new MockResponse()
+                        .setResponseCode(200)
+                        .addHeader("Content-Type", "application/json")
+                        .setBody("""
+                            [
+                                {
+                                    "id": 1,
+                                    "name": "Programación"
+                                },
+                                {
+                                    "id": 2,
+                                    "name": "Bases de datos"
+                                }
+                            ]
+                            """)
+        );
+
+        when(capabilityMapper.toModel(response1))
+                .thenReturn(capability1);
+
+        when(capabilityMapper.toModel(response2))
+                .thenReturn(capability2);
+
+        StepVerifier.create(
+                        capabilityWebClientAdapter.findByIds(
+                                List.of(1L, 2L),
+                                "token"
+                        )
+                )
+                .assertNext(capabilities -> {
+
+                    assertEquals(2, capabilities.size());
+
+                    assertEquals(
+                            1L,
+                            capabilities.get(0).getId()
+                    );
+
+                    assertEquals(
+                            "Programación",
+                            capabilities.get(0).getName()
+                    );
+
+                    assertEquals(
+                            2L,
+                            capabilities.get(1).getId()
+                    );
+
+                    assertEquals(
+                            "Bases de datos",
+                            capabilities.get(1).getName()
+                    );
+                })
+                .verifyComplete();
     }
 }
 

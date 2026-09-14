@@ -60,7 +60,7 @@ public class SecurityConfiguration {
                                 "/v3/api-docs/**"
                         ).permitAll()
                         .pathMatchers("/api/v1/bootcamp/create").hasRole(ADMIN)
-
+                        .pathMatchers("/api/v1/bootcamp/list").hasRole(ADMIN)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(authenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)

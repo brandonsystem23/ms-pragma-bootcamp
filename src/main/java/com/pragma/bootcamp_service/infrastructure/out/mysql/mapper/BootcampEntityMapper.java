@@ -17,6 +17,7 @@ public interface BootcampEntityMapper {
 
     @Mapping(target = "id", source = "bootcampCapabilityEntity.capabilityId")
     @Mapping(target = "name", ignore = true )
+    @Mapping(target = "technologies", ignore = true )
     Capability toCapability(BootcampCapabilityEntity bootcampCapabilityEntity);
 
 }

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.pragma'
-version = '1.0.0'
+version = '1.1.0'
 
 java {
 	toolchain {
@@ -95,7 +95,8 @@ def jacocoExclusions = [
 		'com/pragma/bootcamp_service/infrastructure/out/mysql/mapper/**',
 		'com/pragma/bootcamp_service/infrastructure/out/jwt/mapper/**',
 		'com/pragma/bootcamp_service/infrastructure/out/jwt/dto/**',
-		'com/pragma/bootcamp_service/infrastructure/out/webclient/dto/**'
+		'com/pragma/bootcamp_service/infrastructure/out/webclient/dto/**',
+		'com/pragma/bootcamp_service/infrastructure/out/webclient/mapper/**'
 ]
 
 tasks.named('jacocoTestReport') {

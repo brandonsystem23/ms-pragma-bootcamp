@@ -1,7 +1,10 @@
 package com.pragma.bootcamp_service.infrastructure.out.webclient.adapter;
 
+import com.pragma.bootcamp_service.domain.model.Capability;
 import com.pragma.bootcamp_service.domain.spi.ICapabilityWebClientPort;
 import com.pragma.bootcamp_service.infrastructure.exception.ExternalServiceException;
+import com.pragma.bootcamp_service.infrastructure.out.webclient.dto.CapabilityDetailResponse;
+import com.pragma.bootcamp_service.infrastructure.out.webclient.mapper.CapabilityMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +21,7 @@ import reactor.core.publisher.Mono;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -25,12 +29,18 @@ public class CapabilityWebClientAdapter implements ICapabilityWebClientPort {
 
     private final WebClient capabilityWebClient;
     private final String capabilityPath;
+    private final String capabilityByIdsPath;
+    private final CapabilityMapper capabilityMapper;
 
     public CapabilityWebClientAdapter(
             @Qualifier("capabilityWebClient") WebClient capabilityWebClient,
-            @Value("${clients.capability.path}") String capabilityPath) {
+            @Value("${clients.capability.path}") String capabilityPath,
+            @Value("${clients.capability.by-ids-path}") String capabilityByIdsPath,
+            CapabilityMapper capabilityMapper) {
         this.capabilityWebClient = capabilityWebClient;
         this.capabilityPath = capabilityPath;
+        this.capabilityByIdsPath = capabilityByIdsPath;
+        this.capabilityMapper = capabilityMapper;
     }
 
     @Override
@@ -50,6 +60,45 @@ public class CapabilityWebClientAdapter implements ICapabilityWebClientPort {
                 )
                 .bodyToMono(new ParameterizedTypeReference<List<Long>>() {})
                 .retry(2);
+    }
+
+    @Override
+    public Mono<List<Capability>> findByIds(List<Long> ids, String token) {
+        return getClientPath(capabilityWebClient, capabilityByIdsPath, token, ids)
+                .onStatus(
+                        HttpStatusCode::is4xxClientError,
+                        this::handleClientError
+                )
+                .onStatus(
+                        HttpStatusCode::is5xxServerError,
+                        this::handleServerError
+                )
+                .bodyToFlux(CapabilityDetailResponse.class)
+                .map(capabilityMapper::toModel)
+                .collectList()
+                .retry(2);
+    }
+
+    private static WebClient.ResponseSpec getClientPath(
+            WebClient webClient,
+            String path,
+            String token,
+            List<Long> ids) {
+
+        String idsParam = ids.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        log.info("Consultando capacidades por IDs: {}", ids);
+
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(path)
+                        .queryParam("ids", idsParam)
+                        .build())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve();
     }
 
 

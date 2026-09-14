@@ -1,9 +1,12 @@
 package com.pragma.bootcamp_service.infrastructure.configuration;
 
 import com.pragma.bootcamp_service.domain.api.IBootcampRegisterServicePort;
+import com.pragma.bootcamp_service.domain.api.IBootcampRetrieveServicePort;
+import com.pragma.bootcamp_service.domain.service.CapabilityDetailService;
 import com.pragma.bootcamp_service.domain.spi.IBootcampPersistencePort;
 import com.pragma.bootcamp_service.domain.spi.ICapabilityWebClientPort;
 import com.pragma.bootcamp_service.domain.usecase.BootcampRegisterUseCase;
+import com.pragma.bootcamp_service.domain.usecase.BootcampRetrieveUseCase;
 import com.pragma.bootcamp_service.domain.validation.capability.DomainBootcampValidator;
 import com.pragma.bootcamp_service.domain.validation.capability.BootcampValidator;
 import org.springframework.context.annotation.Bean;
@@ -27,17 +30,37 @@ public class BeanConfiguration {
 
     @Bean
     public IBootcampRegisterServicePort bootcampRegisterUseCase(
-            IBootcampPersistencePort iCapabilityPersistencePort,
-            DomainBootcampValidator domainCapabilityValidator,
-            BootcampValidator capabilityValidator
+            IBootcampPersistencePort iBootcampPersistencePort,
+            DomainBootcampValidator domainBootcampValidator,
+            BootcampValidator bootcampValidator
 
     ) {
         return new BootcampRegisterUseCase(
-                iCapabilityPersistencePort,
-                domainCapabilityValidator,
-                capabilityValidator
+                iBootcampPersistencePort,
+                domainBootcampValidator,
+                bootcampValidator
         );
     }
 
+    @Bean
+    public IBootcampRetrieveServicePort bootcampRetrieveUseCase(
+            IBootcampPersistencePort iBootcampPersistencePort,
+            DomainBootcampValidator domainBootcampValidator,
+            CapabilityDetailService capabilityDetailService
+
+    ) {
+        return new BootcampRetrieveUseCase(
+                iBootcampPersistencePort,
+                domainBootcampValidator,
+                capabilityDetailService
+        );
+    }
+
+    @Bean
+    public CapabilityDetailService capabilityDetailService(
+            ICapabilityWebClientPort iCapabilityWebClientPort
+    ) {
+        return new CapabilityDetailService(iCapabilityWebClientPort);
+    }
 
 }

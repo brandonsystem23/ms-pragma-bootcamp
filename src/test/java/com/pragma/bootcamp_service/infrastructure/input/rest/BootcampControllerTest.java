@@ -2,6 +2,7 @@ package com.pragma.bootcamp_service.infrastructure.input.rest;
 
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
+import com.pragma.bootcamp_service.application.dto.response.PagedBootcampResponse;
 import com.pragma.bootcamp_service.application.handler.IBootcampHandler;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -137,6 +138,56 @@ class BootcampControllerTest {
 
         verify(iBootcampHandler)
                 .create(request, expectedToken);
+    }
+
+    @Test
+    void shouldGetBootcampsSuccessfully() {
+
+        String authorizationHeader = "Bearer token";
+        String token = "token";
+
+        int page = 0;
+        int size = 10;
+        String sortBy = "name";
+        String direction = "asc";
+
+        PagedBootcampResponse response = PagedBootcampResponse.builder()
+                .content(List.of())
+                .page(page)
+                .size(size)
+                .totalElements(0L)
+                .totalPages(0)
+                .first(true)
+                .last(true)
+                .build();
+
+        when(iBootcampHandler.getBootcamps(
+                page,
+                size,
+                sortBy,
+                direction,
+                token
+        )).thenReturn(Mono.just(response));
+
+        StepVerifier.create(
+                        bootcampController.getBootcamps(
+                                authorizationHeader,
+                                page,
+                                size,
+                                sortBy,
+                                direction
+                        )
+                )
+                .expectNext(response)
+                .verifyComplete();
+
+        verify(iBootcampHandler).getBootcamps(
+                page,
+                size,
+                sortBy,
+                direction,
+                token
+        );
     }
 }
 
