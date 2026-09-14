@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 
 import static org.mockito.Mockito.doThrow;
@@ -42,7 +43,7 @@ class BootcampRegisterUseCaseTest {
 
         String token = "Bearer token";
 
-        LocalDate launchDate = LocalDate.of(2026, 10, 1);
+        LocalDate launchDate = LocalDate.of(2026, Month.OCTOBER, 1);
 
         BootcampCommand command = new BootcampCommand(
                 "Desarrollo Backend",
@@ -95,7 +96,7 @@ class BootcampRegisterUseCaseTest {
 
         String token = "Bearer token";
 
-        LocalDate launchDate = LocalDate.of(2026, 10, 1);
+        LocalDate launchDate = LocalDate.of(2026, Month.OCTOBER, 1);
 
         BootcampCommand command = new BootcampCommand(
                 "Desarrollo Backend",
@@ -133,7 +134,7 @@ class BootcampRegisterUseCaseTest {
 
         String token = "Bearer token";
 
-        LocalDate launchDate = LocalDate.of(2026, 10, 1);
+        LocalDate launchDate = LocalDate.of(2026, Month.OCTOBER, 1);
 
         BootcampCommand command = new BootcampCommand(
                 "Desarrollo Backend",
@@ -179,7 +180,7 @@ class BootcampRegisterUseCaseTest {
 
         String token = "Bearer token";
 
-        LocalDate launchDate = LocalDate.of(2026, 10, 1);
+        LocalDate launchDate = LocalDate.of(2026, Month.OCTOBER, 1);
 
         BootcampCommand command = new BootcampCommand(
                 "Desarrollo Backend",

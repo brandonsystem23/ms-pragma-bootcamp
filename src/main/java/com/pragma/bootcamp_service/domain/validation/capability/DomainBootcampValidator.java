@@ -5,6 +5,7 @@ import com.pragma.bootcamp_service.domain.exception.DomainErrorCode;
 import com.pragma.bootcamp_service.domain.exception.DomainErrorMessages;
 import com.pragma.bootcamp_service.domain.exception.DomainException;
 import com.pragma.bootcamp_service.domain.model.command.BootcampCommand;
+import com.pragma.bootcamp_service.domain.model.command.BootcampPageCommand;
 import com.pragma.bootcamp_service.domain.validation.MaxCapabilitiesValidator;
 import com.pragma.bootcamp_service.domain.validation.MinCapabilitiesValidator;
 import com.pragma.bootcamp_service.domain.validation.ValidationUtils;
@@ -12,6 +13,7 @@ import com.pragma.bootcamp_service.domain.validation.ValidationUtils;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashSet;
+import java.util.List;
 
 public class DomainBootcampValidator {
 
@@ -50,6 +52,37 @@ public class DomainBootcampValidator {
             throw new DomainException(DomainErrorCode.VALIDATION_ERROR, DomainErrorMessages.REPEATED_CAPABILITY);
         }
 
+    }
+
+    public void validatePagination(BootcampPageCommand command) {
+
+        if (command.page() < 0) {
+            throw new DomainException(
+                    DomainErrorCode.INVALID_PAGE,
+                    DomainErrorMessages.INVALID_PAGE
+            );
+        }
+
+        if (command.size() <= 0) {
+            throw new DomainException(
+                    DomainErrorCode.INVALID_SIZE,
+                    DomainErrorMessages.INVALID_SIZE
+            );
+        }
+
+        if (!List.of("name", "numberCapabilities").contains(command.sortBy())) {
+            throw new DomainException(
+                    DomainErrorCode.INVALID_SORT_BY,
+                    DomainErrorMessages.INVALID_SORT_BY
+            );
+        }
+
+        if (!List.of("asc", "desc").contains(command.direction().toLowerCase())) {
+            throw new DomainException(
+                    DomainErrorCode.INVALID_DIRECTION,
+                    DomainErrorMessages.INVALID_DIRECTION
+            );
+        }
     }
 
 }

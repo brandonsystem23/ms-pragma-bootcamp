@@ -56,7 +56,11 @@ public class GlobalExceptionHandler {
         return switch (code) {
             case VALIDATION_ERROR,
                  CAPABILITY_NOT_FOUNT,
-                 DUPLICATE_NAME -> HttpStatus.BAD_REQUEST;
+                 DUPLICATE_NAME,
+                 INVALID_PAGE,
+                 INVALID_SIZE,
+                 INVALID_SORT_BY,
+                 INVALID_DIRECTION -> HttpStatus.BAD_REQUEST;
 
             case INVALID_TOKEN -> HttpStatus.UNAUTHORIZED;
 

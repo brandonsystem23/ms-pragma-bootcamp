@@ -15,5 +15,9 @@ public final class DomainErrorMessages {
     public static final String REPEATED_CAPABILITY = "No puede exisitir capacidades repetidas";
     public static final String CAPABILITIES_IDS_REQUIRED = "La lista de capacidades es obligatoria";
     public static final String CAPABILITY_NOT_FOUND = "Alguna de las capacidades ingresadas no existe";
+    public static final String INVALID_PAGE = "El parámetro page debe ser mayor o igual a 0";
+    public static final String INVALID_SIZE = "El parámetro size debe ser mayor a 0";
+    public static final String INVALID_SORT_BY = "El parámetro sortBy solo permite: name, numberCapabilities";
+    public static final String INVALID_DIRECTION = "El parámetro direction solo permite: asc, desc";
 
 }

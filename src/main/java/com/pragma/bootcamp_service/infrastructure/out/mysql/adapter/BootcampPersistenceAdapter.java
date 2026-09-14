@@ -2,6 +2,7 @@ package com.pragma.bootcamp_service.infrastructure.out.mysql.adapter;
 
 import com.pragma.bootcamp_service.domain.model.Bootcamp;
 import com.pragma.bootcamp_service.domain.model.Capability;
+import com.pragma.bootcamp_service.domain.model.PagedResult;
 import com.pragma.bootcamp_service.domain.spi.IBootcampPersistencePort;
 import com.pragma.bootcamp_service.infrastructure.out.mysql.entity.BootcampCapabilityEntity;
 import com.pragma.bootcamp_service.infrastructure.out.mysql.entity.BootcampEntity;
@@ -11,6 +12,7 @@ import com.pragma.bootcamp_service.infrastructure.out.mysql.repository.IBootcamp
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -35,6 +37,69 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
     @Override
     public Mono<Boolean> existsByName(String name) {
         return iBootcampRepository.existsByName(name);
+    }
+
+    @Override
+    public Mono<PagedResult<Bootcamp>> findAll(int page, int size, String sortBy, String direction) {
+
+        long offset = (long) page * size;
+
+        Flux<BootcampEntity> bootcamps = switch (sortBy.toLowerCase()) {
+            case "name" -> "desc".equalsIgnoreCase(direction)
+                    ? iBootcampRepository.findAllOrderByNameDesc(size, offset)
+                    : iBootcampRepository.findAllOrderByNameAsc(size, offset);
+
+            case "numbercapabilities" -> "desc".equalsIgnoreCase(direction)
+                    ? iBootcampRepository.findAllOrderByCapabilityCountDesc(size, offset)
+                    : iBootcampRepository.findAllOrderByCapabilityCountAsc(size, offset);
+
+            default -> iBootcampRepository.findAllOrderByNameAsc(size, offset);
+        };
+
+        Mono<List<Bootcamp>> bootcampsWithCapabilities = bootcamps
+                .concatMap(bootcampEntity ->
+                        findCapabilityIdsByBootcampId(bootcampEntity.getId())
+                                .map(capabilityIds -> {
+                                    Bootcamp bootcamp =
+                                            bootcampEntityMapper.toDomain(bootcampEntity);
+
+                                    List<Capability> capabilities = capabilityIds.stream()
+                                            .map(capabilityId -> Capability.builder()
+                                                    .id(capabilityId)
+                                                    .build())
+                                            .toList();
+
+                                    bootcamp.setCapabilities(capabilities);
+
+                                    return bootcamp;
+                                })
+                )
+                .collectList();
+
+        return Mono.zip(
+                bootcampsWithCapabilities,
+                iBootcampRepository.countAllBootcamps()
+        ).map(tuple -> {
+            List<Bootcamp> content = tuple.getT1();
+            long totalElements = tuple.getT2();
+            int totalPages = (int) Math.ceil((double) totalElements / size);
+
+            return PagedResult.<Bootcamp>builder()
+                    .content(content)
+                    .page(page)
+                    .size(size)
+                    .totalElements(totalElements)
+                    .totalPages(totalPages)
+                    .first(page == 0)
+                    .last(page >= totalPages - 1)
+                    .build();
+        });
+    }
+
+    private Mono<List<Long>> findCapabilityIdsByBootcampId(Long bootcampId) {
+        return iBootcampCapabilityRepository.findAllByBootcampId(bootcampId)
+                .map(BootcampCapabilityEntity::getCapabilityId)
+                .collectList();
     }
 
 
