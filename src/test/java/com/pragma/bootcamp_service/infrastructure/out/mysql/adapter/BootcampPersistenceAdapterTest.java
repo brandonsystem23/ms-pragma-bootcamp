@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -21,6 +22,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -37,6 +39,9 @@ class BootcampPersistenceAdapterTest {
 
     @Mock
     private BootcampEntityMapper bootcampEntityMapper;
+
+    @Mock
+    private TransactionalOperator transactionalOperator;
 
     @InjectMocks
     private BootcampPersistenceAdapter bootcampPersistenceAdapter;
@@ -111,6 +116,9 @@ class BootcampPersistenceAdapterTest {
 
         when(bootcampEntityMapper.toDomain(savedBootcampEntity))
                 .thenReturn(mappedBootcamp);
+
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         StepVerifier.create(
                         bootcampPersistenceAdapter.save(bootcamp)
@@ -203,6 +211,9 @@ class BootcampPersistenceAdapterTest {
         when(iBootcampRepository.save(bootcampEntity))
                 .thenReturn(Mono.error(exception));
 
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         StepVerifier.create(
                         bootcampPersistenceAdapter.save(bootcamp)
                 )
@@ -255,6 +266,9 @@ class BootcampPersistenceAdapterTest {
 
         when(iBootcampCapabilityRepository.saveAll(anyList()))
                 .thenReturn(Flux.error(exception));
+
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         StepVerifier.create(
                         bootcampPersistenceAdapter.save(bootcamp)
@@ -311,6 +325,9 @@ class BootcampPersistenceAdapterTest {
 
         when(bootcampEntityMapper.toDomain(savedBootcampEntity))
                 .thenReturn(mappedBootcamp);
+
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         StepVerifier.create(
                         bootcampPersistenceAdapter.save(bootcamp)

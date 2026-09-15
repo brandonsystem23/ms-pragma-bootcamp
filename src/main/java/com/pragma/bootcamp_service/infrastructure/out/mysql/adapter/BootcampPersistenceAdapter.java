@@ -12,6 +12,7 @@ import com.pragma.bootcamp_service.infrastructure.out.mysql.repository.IBootcamp
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,13 +26,18 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
     private final IBootcampRepository iBootcampRepository;
     private final IBootcampCapabilityRepository iBootcampCapabilityRepository;
     private final BootcampEntityMapper bootcampEntityMapper;
+    private final TransactionalOperator transactionalOperator;
 
     @Override
     public Mono<Bootcamp> save(Bootcamp bootcamp) {
         BootcampEntity bootcampEntity = bootcampEntityMapper.toEntity(bootcamp);
+
         return iBootcampRepository.save(bootcampEntity)
-                .flatMap(savedBootcampEntity -> saveItems(savedBootcampEntity.getId(), bootcamp.getCapabilities())
-                        .map(savedItems -> buildOrder(savedBootcampEntity, savedItems)));
+                .flatMap(savedBootcampEntity ->
+                        saveItems(savedBootcampEntity.getId(), bootcamp.getCapabilities())
+                                .map(savedItems -> buildOrder(savedBootcampEntity, savedItems))
+                )
+                .as(transactionalOperator::transactional);
     }
 
     @Override
