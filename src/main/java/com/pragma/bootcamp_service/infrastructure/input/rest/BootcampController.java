@@ -51,5 +51,16 @@ public class BootcampController {
         return iBootcampHandler.getBootcamps(page, size, sortBy, direction, token);
     }
 
+    @DeleteMapping("/delete/{id}")
+    @Operation(summary = "Eliminar bootcamp por id", description = "Elimina un bootcamp por id. Requiere rol ADMINISTRADOR")
+    public Mono<Void> deleteBootcampById(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            @PathVariable Long id
+    ) {
+        log.info("Solicitud para eliminar bootcamp por id");
 
+        String token = UtilTokenExtractor.extract(authorizationHeader);
+
+        return iBootcampHandler.deleteById(id, token);
+    }
 }

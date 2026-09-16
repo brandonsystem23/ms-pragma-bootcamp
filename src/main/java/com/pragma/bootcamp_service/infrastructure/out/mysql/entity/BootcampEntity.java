@@ -30,5 +30,7 @@ public class BootcampEntity {
     @Column("duration_day")
     private Integer durationDay;
 
+    private Boolean status;
+
 
 }

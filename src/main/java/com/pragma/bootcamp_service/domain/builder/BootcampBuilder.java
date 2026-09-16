@@ -15,6 +15,7 @@ public final class BootcampBuilder {
                 .description(bootcampCommand.description())
                 .launchDate(bootcampCommand.launchDate())
                 .durationDay(bootcampCommand.durationDay())
+                .status(true)
                 .capabilities(bootcampCommand.capabilityIds().stream()
                         .map(BootcampBuilder::buildCapability)
                         .toList())

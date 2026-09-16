@@ -61,6 +61,7 @@ public class SecurityConfiguration {
                         ).permitAll()
                         .pathMatchers("/api/v1/bootcamp/create").hasRole(ADMIN)
                         .pathMatchers("/api/v1/bootcamp/list").hasRole(ADMIN)
+                        .pathMatchers("/api/v1/bootcamp/delete/*").hasRole(ADMIN)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(authenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)

@@ -7,12 +7,11 @@ import com.pragma.bootcamp_service.domain.spi.IBootcampPersistencePort;
 import com.pragma.bootcamp_service.infrastructure.out.mysql.entity.BootcampCapabilityEntity;
 import com.pragma.bootcamp_service.infrastructure.out.mysql.entity.BootcampEntity;
 import com.pragma.bootcamp_service.infrastructure.out.mysql.mapper.BootcampEntityMapper;
-import com.pragma.bootcamp_service.infrastructure.out.mysql.repository.IBootcampRepository;
 import com.pragma.bootcamp_service.infrastructure.out.mysql.repository.IBootcampCapabilityRepository;
+import com.pragma.bootcamp_service.infrastructure.out.mysql.repository.IBootcampRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,18 +25,17 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
     private final IBootcampRepository iBootcampRepository;
     private final IBootcampCapabilityRepository iBootcampCapabilityRepository;
     private final BootcampEntityMapper bootcampEntityMapper;
-    private final TransactionalOperator transactionalOperator;
 
     @Override
     public Mono<Bootcamp> save(Bootcamp bootcamp) {
         BootcampEntity bootcampEntity = bootcampEntityMapper.toEntity(bootcamp);
+        bootcampEntity.setStatus(true);
 
         return iBootcampRepository.save(bootcampEntity)
                 .flatMap(savedBootcampEntity ->
                         saveItems(savedBootcampEntity.getId(), bootcamp.getCapabilities())
-                                .map(savedItems -> buildOrder(savedBootcampEntity, savedItems))
-                )
-                .as(transactionalOperator::transactional);
+                                .map(savedItems -> buildBootcamp(savedBootcampEntity, savedItems))
+                );
     }
 
     @Override
@@ -66,8 +64,7 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
                 .concatMap(bootcampEntity ->
                         findCapabilityIdsByBootcampId(bootcampEntity.getId())
                                 .map(capabilityIds -> {
-                                    Bootcamp bootcamp =
-                                            bootcampEntityMapper.toDomain(bootcampEntity);
+                                    Bootcamp bootcamp = bootcampEntityMapper.toDomain(bootcampEntity);
 
                                     List<Capability> capabilities = capabilityIds.stream()
                                             .map(capabilityId -> Capability.builder()
@@ -102,12 +99,32 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
         });
     }
 
-    private Mono<List<Long>> findCapabilityIdsByBootcampId(Long bootcampId) {
+    @Override
+    public Mono<List<Long>> findCapabilityIdsByBootcampId(Long bootcampId) {
         return iBootcampCapabilityRepository.findAllByBootcampId(bootcampId)
                 .map(BootcampCapabilityEntity::getCapabilityId)
                 .collectList();
     }
 
+    @Override
+    public Mono<Boolean> areResourcesUsedByOtherBootcamps(Long bootcampId) {
+        return Mono.zip(
+                iBootcampRepository.countCapabilityUsageByOtherBootcamps(bootcampId),
+                iBootcampRepository.countTechnologyUsageByOtherBootcamps(bootcampId)
+        ).map(tuple ->
+                tuple.getT1() > 0 || tuple.getT2() > 0
+        );
+    }
+
+    @Override
+    public Mono<Void> updateBootcampCapabilitiesStatusByBootcampId(Long bootcampId, Boolean status) {
+        return iBootcampCapabilityRepository.updateStatusByBootcampId(bootcampId, status).then();
+    }
+
+    @Override
+    public Mono<Void> updateBootcampStatusById(Long bootcampId, Boolean status) {
+        return iBootcampRepository.updateStatusById(bootcampId, status).then();
+    }
 
     private Mono<List<Capability>> saveItems(Long bootcampId, List<Capability> items) {
 
@@ -115,8 +132,8 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
                 .map(item -> BootcampCapabilityEntity.builder()
                         .bootcampId(bootcampId)
                         .capabilityId(item.getId())
-                        .build()
-                )
+                        .status(true)
+                        .build())
                 .toList();
 
         return iBootcampCapabilityRepository.saveAll(entities)
@@ -124,7 +141,7 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
                 .collectList();
     }
 
-    private Bootcamp buildOrder(BootcampEntity bootcampEntity, List<Capability> items) {
+    private Bootcamp buildBootcamp(BootcampEntity bootcampEntity, List<Capability> items) {
         Bootcamp bootcamp = bootcampEntityMapper.toDomain(bootcampEntity);
         bootcamp.setCapabilities(items);
         return bootcamp;

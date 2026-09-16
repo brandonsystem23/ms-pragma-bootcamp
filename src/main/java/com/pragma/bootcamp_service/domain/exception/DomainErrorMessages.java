@@ -19,5 +19,11 @@ public final class DomainErrorMessages {
     public static final String INVALID_SIZE = "El parámetro size debe ser mayor a 0";
     public static final String INVALID_SORT_BY = "El parámetro sortBy solo permite: name, numberCapabilities";
     public static final String INVALID_DIRECTION = "El parámetro direction solo permite: asc, desc";
-
+    public static final String DELETE_ID_REQUIRED = "El id del bootcamp es obligatorio";
+    public static final String RESOURCES_USED_BY_OTHER_BOOTCAMPS =
+            "No se puede eliminar el bootcamp porque alguna capacidad o tecnología asociada está siendo usada en otro bootcamp";
+    public static final String BOOTCAMP_SAVE_ROLLBACK_ERROR =
+            "Ocurrió un error durante el registro transaccional de bootcamp. Se realizó rollback de la operación";
+    public static final String BOOTCAMP_DELETE_ROLLBACK_ERROR =
+            "Ocurrió un error durante la eliminación transaccional de bootcamp. Se realizó rollback de la operación";
 }

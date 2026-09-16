@@ -11,4 +11,5 @@ public interface ICapabilityWebClientPort {
 
     Mono<List<Capability>> findByIds(List<Long> ids, String token);
 
+    Mono<Void> deleteByIds(List<Long> ids, String token);
 }

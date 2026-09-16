@@ -5,6 +5,7 @@ import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
 import com.pragma.bootcamp_service.application.dto.response.PagedBootcampResponse;
 import com.pragma.bootcamp_service.application.handler.IBootcampHandler;
 import com.pragma.bootcamp_service.application.mapper.BootcampDtoMapper;
+import com.pragma.bootcamp_service.domain.api.IBootcampDeleteServicePort;
 import com.pragma.bootcamp_service.domain.api.IBootcampRegisterServicePort;
 import com.pragma.bootcamp_service.domain.api.IBootcampRetrieveServicePort;
 import com.pragma.bootcamp_service.domain.model.command.BootcampPageCommand;
@@ -18,7 +19,7 @@ public class BootcampHandler implements IBootcampHandler {
 
     private final IBootcampRegisterServicePort iBootcampRegisterServicePort;
     private final IBootcampRetrieveServicePort iBootcampRetrieveServicePort;
-
+    private final IBootcampDeleteServicePort iBootcampDeleteServicePort;
     private final BootcampDtoMapper bootcampDtoMapper;
 
     @Override
@@ -49,5 +50,10 @@ public class BootcampHandler implements IBootcampHandler {
                         .last(result.last())
                         .build()
                 );
+    }
+
+    @Override
+    public Mono<Void> deleteById(Long id, String token) {
+        return iBootcampDeleteServicePort.deleteById(id, token);
     }
 }

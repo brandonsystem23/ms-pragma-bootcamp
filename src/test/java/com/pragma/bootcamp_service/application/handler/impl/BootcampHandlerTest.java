@@ -6,6 +6,7 @@ import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
 import com.pragma.bootcamp_service.application.dto.response.CapabilityBasicResponse;
 import com.pragma.bootcamp_service.application.dto.response.TechnologyBasicResponse;
 import com.pragma.bootcamp_service.application.mapper.BootcampDtoMapper;
+import com.pragma.bootcamp_service.domain.api.IBootcampDeleteServicePort;
 import com.pragma.bootcamp_service.domain.api.IBootcampRegisterServicePort;
 import com.pragma.bootcamp_service.domain.api.IBootcampRetrieveServicePort;
 import com.pragma.bootcamp_service.domain.model.Bootcamp;
@@ -37,6 +38,9 @@ class BootcampHandlerTest {
 
     @Mock
     private IBootcampRetrieveServicePort iBootcampRetrieveServicePort;
+
+    @Mock
+    private IBootcampDeleteServicePort iBootcampDeleteServicePort;
 
     @Mock
     private BootcampDtoMapper bootcampDtoMapper;
@@ -329,5 +333,35 @@ class BootcampHandlerTest {
                 .verify();
 
     }
-}
 
+    @Test
+    void shouldDeleteBootcampByIdSuccessfully() {
+        Long bootcampId = 1L;
+        String token = "token";
+
+        when(iBootcampDeleteServicePort.deleteById(bootcampId, token))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(bootcampHandler.deleteById(bootcampId, token))
+                .verifyComplete();
+
+        verify(iBootcampDeleteServicePort).deleteById(bootcampId, token);
+    }
+
+    @Test
+    void shouldPropagateErrorWhenDeleteBootcampByIdFails() {
+        Long bootcampId = 1L;
+        String token = "token";
+
+        when(iBootcampDeleteServicePort.deleteById(bootcampId, token))
+                .thenReturn(Mono.error(new RuntimeException("error eliminando bootcamp")));
+
+        StepVerifier.create(bootcampHandler.deleteById(bootcampId, token))
+                .expectErrorMatches(error ->
+                        error instanceof RuntimeException &&
+                                error.getMessage().equals("error eliminando bootcamp"))
+                .verify();
+
+        verify(iBootcampDeleteServicePort).deleteById(bootcampId, token);
+    }
+}

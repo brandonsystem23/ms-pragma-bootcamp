@@ -17,4 +17,5 @@ public interface IBootcampHandler {
             String token
     );
 
+    Mono<Void> deleteById(Long id, String token);
 }

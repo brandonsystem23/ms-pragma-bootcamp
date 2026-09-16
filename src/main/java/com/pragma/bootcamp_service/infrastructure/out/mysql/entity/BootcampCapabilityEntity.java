@@ -24,4 +24,6 @@ public class BootcampCapabilityEntity {
     @Column("capability_id")
     private Long capabilityId;
 
+    private Boolean status;
+
 }

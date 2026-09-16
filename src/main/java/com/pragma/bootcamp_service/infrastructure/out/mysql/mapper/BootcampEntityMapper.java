@@ -13,11 +13,11 @@ public interface BootcampEntityMapper {
     @Mapping(target = "capabilities", ignore = true)
     Bootcamp toDomain(BootcampEntity bootcampEntity);
 
-    BootcampEntity toEntity(Bootcamp capability);
+    BootcampEntity toEntity(Bootcamp bootcamp);
 
     @Mapping(target = "id", source = "bootcampCapabilityEntity.capabilityId")
-    @Mapping(target = "name", ignore = true )
-    @Mapping(target = "technologies", ignore = true )
+    @Mapping(target = "name", ignore = true)
+    @Mapping(target = "technologies", ignore = true)
     Capability toCapability(BootcampCapabilityEntity bootcampCapabilityEntity);
 
 }
