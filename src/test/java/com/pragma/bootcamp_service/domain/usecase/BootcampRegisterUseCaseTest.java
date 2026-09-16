@@ -1,5 +1,8 @@
 package com.pragma.bootcamp_service.domain.usecase;
 
+import com.pragma.bootcamp_service.domain.exception.DomainErrorCode;
+import com.pragma.bootcamp_service.domain.exception.DomainErrorMessages;
+import com.pragma.bootcamp_service.domain.exception.DomainException;
 import com.pragma.bootcamp_service.domain.model.Bootcamp;
 import com.pragma.bootcamp_service.domain.model.command.BootcampCommand;
 import com.pragma.bootcamp_service.domain.spi.IBootcampPersistencePort;
@@ -11,6 +14,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -18,9 +22,9 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +38,9 @@ class BootcampRegisterUseCaseTest {
 
     @Mock
     private BootcampValidator bootcampValidator;
+
+    @Mock
+    private TransactionalOperator transactionalOperator;
 
     @InjectMocks
     private BootcampRegisterUseCase bootcampRegisterUseCase;
@@ -71,24 +78,15 @@ class BootcampRegisterUseCaseTest {
                 ArgumentMatchers.any(Bootcamp.class)
         )).thenReturn(Mono.just(savedBootcamp));
 
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         StepVerifier.create(
                         bootcampRegisterUseCase.create(command, token)
                 )
                 .expectNext(savedBootcamp)
                 .verifyComplete();
 
-        verify(domainBootcampValidator)
-                .validateBootcampCommand(command);
-
-        verify(bootcampValidator)
-                .validateBootcamp(
-                        command.name(),
-                        command.capabilityIds(),
-                        token
-                );
-
-        verify(iBootcampPersistencePort)
-                .save(ArgumentMatchers.any(Bootcamp.class));
     }
 
     @Test
@@ -113,20 +111,17 @@ class BootcampRegisterUseCaseTest {
                 .when(domainBootcampValidator)
                 .validateBootcampCommand(command);
 
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         StepVerifier.create(
                         bootcampRegisterUseCase.create(command, token)
                 )
                 .expectErrorMatches(error ->
                         error instanceof RuntimeException &&
-                                error.getMessage().equals("error validando comando")
+                                error.getMessage().equals("Ocurrió un error durante el registro transaccional de bootcamp. Se realizó rollback de la operación")
                 )
                 .verify();
-
-        verify(domainBootcampValidator)
-                .validateBootcampCommand(command);
-
-        verifyNoInteractions(bootcampValidator);
-        verifyNoInteractions(iBootcampPersistencePort);
     }
 
     @Test
@@ -153,26 +148,18 @@ class BootcampRegisterUseCaseTest {
                 token
         )).thenReturn(Mono.error(exception));
 
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         StepVerifier.create(
                         bootcampRegisterUseCase.create(command, token)
                 )
                 .expectErrorMatches(error ->
                         error instanceof RuntimeException &&
-                                error.getMessage().equals("error validando capacidades")
+                                error.getMessage().equals("Ocurrió un error durante el registro transaccional de bootcamp. Se realizó rollback de la operación")
                 )
                 .verify();
 
-        verify(domainBootcampValidator)
-                .validateBootcampCommand(command);
-
-        verify(bootcampValidator)
-                .validateBootcamp(
-                        command.name(),
-                        command.capabilityIds(),
-                        token
-                );
-
-        verifyNoInteractions(iBootcampPersistencePort);
     }
 
     @Test
@@ -203,27 +190,55 @@ class BootcampRegisterUseCaseTest {
                 ArgumentMatchers.any(Bootcamp.class)
         )).thenReturn(Mono.error(exception));
 
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         StepVerifier.create(
                         bootcampRegisterUseCase.create(command, token)
                 )
                 .expectErrorMatches(error ->
                         error instanceof RuntimeException &&
-                                error.getMessage().equals("error guardando bootcamp")
+                                error.getMessage().equals("Ocurrió un error durante el registro transaccional de bootcamp. Se realizó rollback de la operación")
                 )
                 .verify();
+    }
 
-        verify(domainBootcampValidator)
-                .validateBootcampCommand(command);
+    @Test
+    void shouldPropagateDomainExceptionWithoutMapping() {
 
-        verify(bootcampValidator)
-                .validateBootcamp(
-                        command.name(),
-                        command.capabilityIds(),
-                        token
-                );
+        String token = "Bearer token";
 
-        verify(iBootcampPersistencePort)
-                .save(ArgumentMatchers.any(Bootcamp.class));
+        LocalDate launchDate = LocalDate.of(2026, Month.OCTOBER, 1);
+
+        BootcampCommand command = new BootcampCommand(
+                "Desarrollo Backend",
+                "Bootcamp de desarrollo backend",
+                launchDate,
+                30,
+                List.of(1L, 2L, 3L)
+        );
+
+        DomainException domainException = new DomainException(
+                DomainErrorCode.INTERNAL_ERROR,
+                DomainErrorMessages.BOOTCAMP_SAVE_ROLLBACK_ERROR
+        );
+
+        when(bootcampValidator.validateBootcamp(
+                command.name(),
+                command.capabilityIds(),
+                token
+        )).thenReturn(Mono.error(domainException));
+
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        StepVerifier.create(
+                        bootcampRegisterUseCase.create(command, token)
+                )
+                .expectErrorSatisfies(error -> {
+                    assertSame(domainException, error);
+                })
+                .verify();
     }
 }
 

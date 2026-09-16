@@ -43,6 +43,7 @@ class CapabilityWebClientAdapterTest {
                 capabilityWebClient,
                 "/api/v1/capability/exists-by-ids",
                 "/api/v1/capability/by-ids",
+                "/api/v1/capability/delete",
                 capabilityMapper
         );
     }
@@ -388,5 +389,60 @@ class CapabilityWebClientAdapterTest {
                 })
                 .verifyComplete();
     }
+
+    @Test
+    void shouldDeleteCapabilitiesByIdsSuccessfully() {
+
+        mockWebServer.enqueue(
+                new MockResponse()
+                        .setResponseCode(200)
+        );
+
+        StepVerifier.create(
+                        capabilityWebClientAdapter.deleteByIds(
+                                List.of(1L, 2L, 3L),
+                                "token"
+                        )
+                )
+                .verifyComplete();
+    }
+
+    @Test
+    void shouldReturnExternalServiceExceptionWhenDeleteByIdsServerErrorOccurs() {
+
+        enqueueErrorResponse(
+                500,
+                "Ocurrió un error durante la eliminación transaccional de capacidades. Se realizó rollback de la operación"
+        );
+
+        StepVerifier.create(
+                        capabilityWebClientAdapter.deleteByIds(
+                                List.of(1L, 2L, 3L),
+                                "token"
+                        )
+                )
+                .expectErrorSatisfies(throwable -> {
+
+                    assertInstanceOf(
+                            ExternalServiceException.class,
+                            throwable
+                    );
+
+                    ExternalServiceException exception =
+                            (ExternalServiceException) throwable;
+
+                    assertEquals(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            exception.getStatus()
+                    );
+
+                    assertEquals(
+                            "Ocurrió un error durante la eliminación transaccional de capacidades. Se realizó rollback de la operación",
+                            exception.getMessage()
+                    );
+                })
+                .verify();
+    }
+
 }
 

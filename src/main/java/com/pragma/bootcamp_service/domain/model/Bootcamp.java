@@ -24,5 +24,7 @@ public class Bootcamp {
 
     Integer durationDay;
 
+    Boolean status;
+
     List<Capability> capabilities;
 }

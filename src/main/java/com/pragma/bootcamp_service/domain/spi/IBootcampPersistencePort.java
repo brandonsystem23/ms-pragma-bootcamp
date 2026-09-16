@@ -4,6 +4,7 @@ import com.pragma.bootcamp_service.domain.model.Bootcamp;
 import com.pragma.bootcamp_service.domain.model.PagedResult;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 
 public interface IBootcampPersistencePort {
 
@@ -13,4 +14,11 @@ public interface IBootcampPersistencePort {
 
     Mono<PagedResult<Bootcamp>> findAll(int page, int size, String sortBy, String direction);
 
+    Mono<List<Long>> findCapabilityIdsByBootcampId(Long bootcampId);
+
+    Mono<Boolean> areResourcesUsedByOtherBootcamps(Long bootcampId);
+
+    Mono<Void> updateBootcampCapabilitiesStatusByBootcampId(Long bootcampId, Boolean status);
+
+    Mono<Void> updateBootcampStatusById(Long bootcampId, Boolean status);
 }

@@ -189,5 +189,37 @@ class BootcampControllerTest {
                 token
         );
     }
-}
 
+    @Test
+    void shouldDeleteBootcampByIdSuccessfully() {
+        String authorizationHeader = "Bearer token";
+        String token = "token";
+        Long id = 1L;
+
+        when(iBootcampHandler.deleteById(id, token))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(bootcampController.deleteBootcampById(authorizationHeader, id))
+                .verifyComplete();
+
+        verify(iBootcampHandler).deleteById(id, token);
+    }
+
+    @Test
+    void shouldPropagateErrorWhenDeleteBootcampByIdFails() {
+        String authorizationHeader = "Bearer token";
+        String token = "token";
+        Long id = 1L;
+
+        when(iBootcampHandler.deleteById(id, token))
+                .thenReturn(Mono.error(new RuntimeException("error eliminando bootcamp")));
+
+        StepVerifier.create(bootcampController.deleteBootcampById(authorizationHeader, id))
+                .expectErrorMatches(error ->
+                        error instanceof RuntimeException &&
+                                error.getMessage().equals("error eliminando bootcamp"))
+                .verify();
+
+        verify(iBootcampHandler).deleteById(id, token);
+    }
+}
