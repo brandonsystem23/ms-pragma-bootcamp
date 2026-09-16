@@ -92,7 +92,6 @@ public interface IBootcampRepository extends ReactiveCrudRepository<BootcampEnti
     """)
     Mono<Long> countCapabilityUsageByOtherBootcamps(List<Long> capabilityIds, Long bootcampId);
 
-
     @Query("""
     SELECT COUNT(*)
     FROM capability_technology ct1
@@ -111,8 +110,6 @@ public interface IBootcampRepository extends ReactiveCrudRepository<BootcampEnti
     """)
     Mono<Long> countTechnologyUsageByOtherBootcamps(List<Long> capabilityIds, Long bootcampId);
 
-
-
     @Modifying
     @Query("""
         UPDATE bootcamp
@@ -120,4 +117,12 @@ public interface IBootcampRepository extends ReactiveCrudRepository<BootcampEnti
         WHERE id = :bootcampId
         """)
     Mono<Integer> updateStatusById(Long bootcampId, Boolean status);
+
+    @Query("""
+    SELECT id, name, description, launch_date, duration_day, status
+    FROM bootcamp
+    WHERE id = :bootcampId
+      AND status = true
+    """)
+    Mono<BootcampEntity> findActiveById(Long bootcampId);
 }

@@ -20,6 +20,7 @@ import org.springframework.security.web.server.util.matcher.ServerWebExchangeMat
 public class SecurityConfiguration {
 
     private static final String ADMIN = "ADMINISTRADOR";
+    private static final String PARTICIPANT = "PARTICIPANTE";
 
     private final JwtProvider jwtProvider;
     private final JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint;
@@ -62,6 +63,7 @@ public class SecurityConfiguration {
                         .pathMatchers("/api/v1/bootcamp/create").hasRole(ADMIN)
                         .pathMatchers("/api/v1/bootcamp/list").hasRole(ADMIN)
                         .pathMatchers("/api/v1/bootcamp/delete/*").hasRole(ADMIN)
+                        .pathMatchers("/api/v1/bootcamp/enroll").hasRole(PARTICIPANT)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(authenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)

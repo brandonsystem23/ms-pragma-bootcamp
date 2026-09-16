@@ -5,7 +5,7 @@ import com.pragma.bootcamp_service.domain.exception.DomainErrorMessages;
 import com.pragma.bootcamp_service.domain.exception.DomainException;
 import com.pragma.bootcamp_service.domain.model.command.BootcampCommand;
 import com.pragma.bootcamp_service.domain.model.command.BootcampPageCommand;
-import com.pragma.bootcamp_service.domain.validation.capability.DomainBootcampValidator;
+import com.pragma.bootcamp_service.domain.validation.bootcamp.DomainBootcampValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

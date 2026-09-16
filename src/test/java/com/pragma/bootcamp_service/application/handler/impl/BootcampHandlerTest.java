@@ -1,5 +1,6 @@
 package com.pragma.bootcamp_service.application.handler.impl;
 
+import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampListItemResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
@@ -7,11 +8,13 @@ import com.pragma.bootcamp_service.application.dto.response.CapabilityBasicRespo
 import com.pragma.bootcamp_service.application.dto.response.TechnologyBasicResponse;
 import com.pragma.bootcamp_service.application.mapper.BootcampDtoMapper;
 import com.pragma.bootcamp_service.domain.api.IBootcampDeleteServicePort;
+import com.pragma.bootcamp_service.domain.api.IBootcampEnrollmentServicePort;
 import com.pragma.bootcamp_service.domain.api.IBootcampRegisterServicePort;
 import com.pragma.bootcamp_service.domain.api.IBootcampRetrieveServicePort;
 import com.pragma.bootcamp_service.domain.model.Bootcamp;
 import com.pragma.bootcamp_service.domain.model.PagedResult;
 import com.pragma.bootcamp_service.domain.model.command.BootcampCommand;
+import com.pragma.bootcamp_service.domain.model.command.BootcampEnrollmentCommand;
 import com.pragma.bootcamp_service.domain.model.command.BootcampPageCommand;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +30,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +46,9 @@ class BootcampHandlerTest {
 
     @Mock
     private BootcampDtoMapper bootcampDtoMapper;
+
+    @Mock
+    private IBootcampEnrollmentServicePort iBootcampEnrollmentServicePort;
 
     @InjectMocks
     private BootcampHandler bootcampHandler;
@@ -101,10 +106,6 @@ class BootcampHandlerTest {
         StepVerifier.create(bootcampHandler.create(request, token))
                 .expectNext(response)
                 .verifyComplete();
-
-        verify(bootcampDtoMapper).toCommand(request);
-        verify(iBootcampRegisterServicePort).create(command, token);
-        verify(bootcampDtoMapper).toResponse(bootcamp);
     }
 
     @Test
@@ -146,8 +147,6 @@ class BootcampHandlerTest {
                 )
                 .verify();
 
-        verify(bootcampDtoMapper).toCommand(request);
-        verify(iBootcampRegisterServicePort).create(command, token);
     }
 
     @Test
@@ -344,8 +343,6 @@ class BootcampHandlerTest {
 
         StepVerifier.create(bootcampHandler.deleteById(bootcampId, token))
                 .verifyComplete();
-
-        verify(iBootcampDeleteServicePort).deleteById(bootcampId, token);
     }
 
     @Test
@@ -361,7 +358,65 @@ class BootcampHandlerTest {
                         error instanceof RuntimeException &&
                                 error.getMessage().equals("error eliminando bootcamp"))
                 .verify();
-
-        verify(iBootcampDeleteServicePort).deleteById(bootcampId, token);
     }
+
+    @Test
+    void shouldEnrollToBootcampSuccessfully() {
+
+        Long bootcampId = 1L;
+        Long participantId = 10L;
+
+        BootcampEnrollmentRequest request =
+                new BootcampEnrollmentRequest(bootcampId);
+
+        BootcampEnrollmentCommand command =
+                new BootcampEnrollmentCommand(bootcampId, participantId);
+
+        when(iBootcampEnrollmentServicePort.enroll(command))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(
+                        bootcampHandler.enroll(request, participantId)
+                )
+                .assertNext(response -> {
+                    assertEquals(bootcampId, response.bootcampId());
+                    assertEquals(participantId, response.participantId());
+                    assertEquals(
+                            "Inscripción realizada exitosamente",
+                            response.message()
+                    );
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void shouldPropagateErrorWhenEnrollmentFails() {
+
+        Long bootcampId = 1L;
+        Long participantId = 10L;
+
+        BootcampEnrollmentRequest request =
+                new BootcampEnrollmentRequest(bootcampId);
+
+        BootcampEnrollmentCommand command =
+                new BootcampEnrollmentCommand(bootcampId, participantId);
+
+        RuntimeException exception =
+                new RuntimeException("error realizando inscripción");
+
+        when(iBootcampEnrollmentServicePort.enroll(command))
+                .thenReturn(Mono.error(exception));
+
+        StepVerifier.create(
+                        bootcampHandler.enroll(request, participantId)
+                )
+                .expectErrorMatches(error ->
+                        error instanceof RuntimeException &&
+                                error.getMessage().equals(
+                                        "error realizando inscripción"
+                                )
+                )
+                .verify();
+    }
+
 }

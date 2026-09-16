@@ -14,6 +14,8 @@ public interface IBootcampPersistencePort {
 
     Mono<PagedResult<Bootcamp>> findAll(int page, int size, String sortBy, String direction);
 
+    Mono<Bootcamp> findActiveById(Long bootcampId);
+
     Mono<List<Long>> findCapabilityIdsByBootcampId(Long bootcampId);
 
     Mono<Boolean> areResourcesUsedByOtherBootcamps(List<Long> capabilityIds, Long bootcampId);

@@ -1,15 +1,19 @@
 package com.pragma.bootcamp_service.infrastructure.input.rest;
 
+import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
+import com.pragma.bootcamp_service.application.dto.response.BootcampEnrollmentResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
 import com.pragma.bootcamp_service.application.dto.response.PagedBootcampResponse;
 import com.pragma.bootcamp_service.application.handler.IBootcampHandler;
+import com.pragma.bootcamp_service.infrastructure.security.jwt.AuthenticatedUser;
 import com.pragma.bootcamp_service.infrastructure.util.UtilTokenExtractor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -62,5 +66,18 @@ public class BootcampController {
         String token = UtilTokenExtractor.extract(authorizationHeader);
 
         return iBootcampHandler.deleteById(id, token);
+    }
+
+    @PostMapping("/enroll")
+    @Operation(summary = "Inscribirme a bootcamp", description = "Permite a un usuario con rol PARTICIPANTE inscribirse a un bootcamp")
+    public Mono<BootcampEnrollmentResponse> enrollToBootcamp(
+            @RequestBody BootcampEnrollmentRequest request,
+            Authentication authentication
+    ) {
+        log.info("Solicitud para inscribirse a bootcamp");
+
+        AuthenticatedUser authenticatedUser = (AuthenticatedUser) authentication.getPrincipal();
+
+        return iBootcampHandler.enroll(request, authenticatedUser.userId());
     }
 }

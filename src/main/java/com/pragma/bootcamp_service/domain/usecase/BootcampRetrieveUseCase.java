@@ -6,7 +6,7 @@ import com.pragma.bootcamp_service.domain.model.PagedResult;
 import com.pragma.bootcamp_service.domain.model.command.BootcampPageCommand;
 import com.pragma.bootcamp_service.domain.service.CapabilityDetailService;
 import com.pragma.bootcamp_service.domain.spi.IBootcampPersistencePort;
-import com.pragma.bootcamp_service.domain.validation.capability.DomainBootcampValidator;
+import com.pragma.bootcamp_service.domain.validation.bootcamp.DomainBootcampValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;

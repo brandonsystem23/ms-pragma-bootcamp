@@ -16,9 +16,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.LocalDate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
@@ -50,6 +52,8 @@ class BootcampPersistenceAdapterTest {
                 .id(null)
                 .name("Desarrollo Backend")
                 .description("Bootcamp de desarrollo backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .capabilities(List.of(capability1, capability2))
                 .build();
@@ -57,6 +61,8 @@ class BootcampPersistenceAdapterTest {
         BootcampEntity bootcampEntity = BootcampEntity.builder()
                 .name("Desarrollo Backend")
                 .description("Bootcamp de desarrollo backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .build();
 
@@ -64,6 +70,8 @@ class BootcampPersistenceAdapterTest {
                 .id(1L)
                 .name("Desarrollo Backend")
                 .description("Bootcamp de desarrollo backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .build();
 
@@ -83,6 +91,8 @@ class BootcampPersistenceAdapterTest {
                 .id(1L)
                 .name("Desarrollo Backend")
                 .description("Bootcamp de desarrollo backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .capabilities(List.of())
                 .build();
@@ -99,6 +109,8 @@ class BootcampPersistenceAdapterTest {
                     assertEquals(1L, result.getId());
                     assertEquals("Desarrollo Backend", result.getName());
                     assertEquals("Bootcamp de desarrollo backend", result.getDescription());
+                    assertEquals(LocalDate.of(2026, 10, 1), result.getLaunchDate());
+                    assertEquals(30, result.getDurationDay());
                     assertEquals(List.of(capability1, capability2), result.getCapabilities());
                     assertTrue(result.getStatus());
                 })
@@ -124,6 +136,8 @@ class BootcampPersistenceAdapterTest {
                 .id(1L)
                 .name("Bootcamp Backend")
                 .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .build();
 
@@ -131,6 +145,8 @@ class BootcampPersistenceAdapterTest {
                 .id(1L)
                 .name("Bootcamp Backend")
                 .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .build();
 
@@ -163,6 +179,289 @@ class BootcampPersistenceAdapterTest {
     }
 
     @Test
+    void shouldFindAllBootcampsOrderByNameDesc() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
+                .status(true)
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
+                .status(true)
+                .build();
+
+        BootcampCapabilityEntity capabilityEntity = BootcampCapabilityEntity.builder()
+                .bootcampId(1L)
+                .capabilityId(10L)
+                .status(true)
+                .build();
+
+        when(iBootcampRepository.findAllOrderByNameDesc(10, 0L))
+                .thenReturn(Flux.just(entity));
+
+        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
+                .thenReturn(Flux.just(capabilityEntity));
+
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(1L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(0, 10, "name", "desc")
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.content().size());
+                    assertEquals(1L, result.content().getFirst().getId());
+                    assertEquals("Bootcamp Backend", result.content().getFirst().getName());
+                    assertEquals(
+                            List.of(Capability.builder().id(10L).build()),
+                            result.content().getFirst().getCapabilities()
+                    );
+                    assertEquals(1L, result.totalElements());
+                    assertEquals(1, result.totalPages());
+                    assertTrue(result.first());
+                    assertTrue(result.last());
+                })
+                .verifyComplete();
+
+        verify(iBootcampRepository).findAllOrderByNameDesc(10, 0L);
+    }
+
+    @Test
+    void shouldFindAllBootcampsOrderByNumberCapabilitiesAsc() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
+                .status(true)
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
+                .status(true)
+                .build();
+
+        BootcampCapabilityEntity capabilityEntity = BootcampCapabilityEntity.builder()
+                .bootcampId(1L)
+                .capabilityId(10L)
+                .status(true)
+                .build();
+
+        when(iBootcampRepository.findAllOrderByCapabilityCountAsc(10, 0L))
+                .thenReturn(Flux.just(entity));
+
+        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
+                .thenReturn(Flux.just(capabilityEntity));
+
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(1L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(
+                                0, 10, "numbercapabilities", "asc"
+                        )
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.content().size());
+                    assertEquals(1L, result.content().getFirst().getId());
+                    assertEquals("Bootcamp Backend", result.content().getFirst().getName());
+                    assertEquals(
+                            List.of(Capability.builder().id(10L).build()),
+                            result.content().getFirst().getCapabilities()
+                    );
+                    assertEquals(1L, result.totalElements());
+                    assertEquals(1, result.totalPages());
+                    assertTrue(result.first());
+                    assertTrue(result.last());
+                })
+                .verifyComplete();
+
+        verify(iBootcampRepository).findAllOrderByCapabilityCountAsc(10, 0L);
+    }
+
+    @Test
+    void shouldFindAllBootcampsOrderByNumberCapabilitiesDesc() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
+                .status(true)
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
+                .status(true)
+                .build();
+
+        BootcampCapabilityEntity capabilityEntity = BootcampCapabilityEntity.builder()
+                .bootcampId(1L)
+                .capabilityId(10L)
+                .status(true)
+                .build();
+
+        when(iBootcampRepository.findAllOrderByCapabilityCountDesc(10, 0L))
+                .thenReturn(Flux.just(entity));
+
+        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
+                .thenReturn(Flux.just(capabilityEntity));
+
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(1L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(
+                                0, 10, "numbercapabilities", "desc"
+                        )
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.content().size());
+                    assertEquals(1L, result.content().getFirst().getId());
+                    assertEquals("Bootcamp Backend", result.content().getFirst().getName());
+                    assertEquals(
+                            List.of(Capability.builder().id(10L).build()),
+                            result.content().getFirst().getCapabilities()
+                    );
+                    assertEquals(1L, result.totalElements());
+                    assertEquals(1, result.totalPages());
+                    assertTrue(result.first());
+                    assertTrue(result.last());
+                })
+                .verifyComplete();
+
+        verify(iBootcampRepository).findAllOrderByCapabilityCountDesc(10, 0L);
+    }
+
+    @Test
+    void shouldReturnDefaultSortingWhenSortByIsUnknown() {
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
+                .status(true)
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(1L)
+                .name("Bootcamp Backend")
+                .description("Backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
+                .status(true)
+                .build();
+
+        when(iBootcampRepository.findAllOrderByNameAsc(10, 0L))
+                .thenReturn(Flux.just(entity));
+        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
+                .thenReturn(Flux.empty());
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+        when(iBootcampRepository.countAllBootcamps())
+                .thenReturn(Mono.just(1L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.findAll(0, 10, "unknown", "asc")
+                )
+                .assertNext(result -> {
+                    assertEquals(1, result.content().size());
+                    assertEquals("Bootcamp Backend", result.content().getFirst().getName());
+                    assertEquals(List.of(), result.content().getFirst().getCapabilities());
+                })
+                .verifyComplete();
+
+        verify(iBootcampRepository).findAllOrderByNameAsc(10, 0L);
+    }
+
+    @Test
+    void shouldFindActiveByIdSuccessfully() {
+        Long bootcampId = 1L;
+
+        BootcampEntity entity = BootcampEntity.builder()
+                .id(bootcampId)
+                .name("Bootcamp Java")
+                .description("Bootcamp Java description")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(20)
+                .status(true)
+                .build();
+
+        Bootcamp bootcamp = Bootcamp.builder()
+                .id(bootcampId)
+                .name("Bootcamp Java")
+                .description("Bootcamp Java description")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(20)
+                .status(true)
+                .build();
+
+        when(iBootcampRepository.findActiveById(bootcampId))
+                .thenReturn(Mono.just(entity));
+        when(bootcampEntityMapper.toDomain(entity))
+                .thenReturn(bootcamp);
+
+        StepVerifier.create(bootcampPersistenceAdapter.findActiveById(bootcampId))
+                .assertNext(result -> {
+                    assertEquals(bootcampId, result.getId());
+                    assertEquals("Bootcamp Java", result.getName());
+                    assertEquals("Bootcamp Java description", result.getDescription());
+                    assertEquals(LocalDate.of(2026, 10, 1), result.getLaunchDate());
+                    assertEquals(20, result.getDurationDay());
+                    assertTrue(result.getStatus());
+                })
+                .verifyComplete();
+
+        verify(iBootcampRepository).findActiveById(bootcampId);
+        verify(bootcampEntityMapper).toDomain(entity);
+    }
+
+    @Test
+    void shouldReturnEmptyWhenActiveBootcampByIdDoesNotExist() {
+        Long bootcampId = 999L;
+
+        when(iBootcampRepository.findActiveById(bootcampId))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(bootcampPersistenceAdapter.findActiveById(bootcampId))
+                .verifyComplete();
+
+        verify(iBootcampRepository).findActiveById(bootcampId);
+        verifyNoInteractions(bootcampEntityMapper);
+    }
+
+    @Test
     void shouldFindCapabilityIdsByBootcampIdSuccessfully() {
         when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
                 .thenReturn(Flux.just(
@@ -175,8 +474,6 @@ class BootcampPersistenceAdapterTest {
                 .verifyComplete();
     }
 
-
-
     @Test
     void shouldReturnIfResourcesAreUsedByOtherBootcamps() {
 
@@ -187,12 +484,26 @@ class BootcampPersistenceAdapterTest {
                 .thenReturn(Mono.just(1L));
 
         StepVerifier.create(
-                        bootcampPersistenceAdapter.areResourcesUsedByOtherBootcamps(List.of(1L,2L),1L)
+                        bootcampPersistenceAdapter.areResourcesUsedByOtherBootcamps(List.of(1L, 2L), 1L)
                 )
                 .expectNext(true)
                 .verifyComplete();
+    }
 
+    @Test
+    void shouldReturnFalseWhenResourcesAreNotUsedByOtherBootcamps() {
 
+        when(iBootcampRepository.countCapabilityUsageByOtherBootcamps(anyList(), anyLong()))
+                .thenReturn(Mono.just(0L));
+
+        when(iBootcampRepository.countTechnologyUsageByOtherBootcamps(anyList(), anyLong()))
+                .thenReturn(Mono.just(0L));
+
+        StepVerifier.create(
+                        bootcampPersistenceAdapter.areResourcesUsedByOtherBootcamps(List.of(1L, 2L), 1L)
+                )
+                .expectNext(false)
+                .verifyComplete();
     }
 
     @Test
@@ -218,6 +529,8 @@ class BootcampPersistenceAdapterTest {
         Bootcamp bootcamp = Bootcamp.builder()
                 .name("Desarrollo Backend")
                 .description("Bootcamp de desarrollo backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .capabilities(List.of(Capability.builder().id(1L).build()))
                 .build();
@@ -225,6 +538,8 @@ class BootcampPersistenceAdapterTest {
         BootcampEntity bootcampEntity = BootcampEntity.builder()
                 .name("Desarrollo Backend")
                 .description("Bootcamp de desarrollo backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .build();
 
@@ -251,6 +566,8 @@ class BootcampPersistenceAdapterTest {
         Bootcamp bootcamp = Bootcamp.builder()
                 .name("Desarrollo Backend")
                 .description("Bootcamp de desarrollo backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .capabilities(List.of(capability))
                 .build();
@@ -258,6 +575,8 @@ class BootcampPersistenceAdapterTest {
         BootcampEntity bootcampEntity = BootcampEntity.builder()
                 .name("Desarrollo Backend")
                 .description("Bootcamp de desarrollo backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .build();
 
@@ -265,6 +584,8 @@ class BootcampPersistenceAdapterTest {
                 .id(1L)
                 .name("Desarrollo Backend")
                 .description("Bootcamp de desarrollo backend")
+                .launchDate(LocalDate.of(2026, 10, 1))
+                .durationDay(30)
                 .status(true)
                 .build();
 
@@ -306,168 +627,19 @@ class BootcampPersistenceAdapterTest {
     }
 
     @Test
-    void shouldFindAllBootcampsOrderByNameDesc() {
+    void shouldPropagateErrorWhenFindingActiveByIdFails() {
+        Long bootcampId = 1L;
+        RuntimeException exception = new RuntimeException("error consultando bootcamp");
 
-        BootcampEntity entity = BootcampEntity.builder()
-                .id(1L)
-                .name("Bootcamp Backend")
-                .description("Backend")
-                .status(true)
-                .build();
+        when(iBootcampRepository.findActiveById(bootcampId))
+                .thenReturn(Mono.error(exception));
 
-        Bootcamp bootcamp = Bootcamp.builder()
-                .id(1L)
-                .name("Bootcamp Backend")
-                .description("Backend")
-                .status(true)
-                .build();
+        StepVerifier.create(bootcampPersistenceAdapter.findActiveById(bootcampId))
+                .expectErrorMatches(error ->
+                        error instanceof RuntimeException &&
+                                error.getMessage().equals("error consultando bootcamp"))
+                .verify();
 
-        BootcampCapabilityEntity capabilityEntity = BootcampCapabilityEntity.builder()
-                .bootcampId(1L)
-                .capabilityId(10L)
-                .status(true)
-                .build();
-
-        when(iBootcampRepository.findAllOrderByNameDesc(10, 0L))
-                .thenReturn(Flux.just(entity));
-
-        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
-                .thenReturn(Flux.just(capabilityEntity));
-
-        when(bootcampEntityMapper.toDomain(entity))
-                .thenReturn(bootcamp);
-
-        when(iBootcampRepository.countAllBootcamps())
-                .thenReturn(Mono.just(1L));
-
-        StepVerifier.create(
-                        bootcampPersistenceAdapter.findAll(0, 10, "name", "desc")
-                )
-                .assertNext(result -> {
-                    assertEquals(1, result.content().size());
-                    assertEquals(1L, result.content().getFirst().getId());
-                    assertEquals("Bootcamp Backend",
-                            result.content().getFirst().getName());
-                    assertEquals(
-                            List.of(Capability.builder().id(10L).build()),
-                            result.content().getFirst().getCapabilities()
-                    );
-                })
-                .verifyComplete();
-
-        verify(iBootcampRepository)
-                .findAllOrderByNameDesc(10, 0L);
-    }
-
-    @Test
-    void shouldFindAllBootcampsOrderByNumberCapabilitiesAsc() {
-
-        BootcampEntity entity = BootcampEntity.builder()
-                .id(1L)
-                .name("Bootcamp Backend")
-                .description("Backend")
-                .status(true)
-                .build();
-
-        Bootcamp bootcamp = Bootcamp.builder()
-                .id(1L)
-                .name("Bootcamp Backend")
-                .description("Backend")
-                .status(true)
-                .build();
-
-        BootcampCapabilityEntity capabilityEntity = BootcampCapabilityEntity.builder()
-                .bootcampId(1L)
-                .capabilityId(10L)
-                .status(true)
-                .build();
-
-        when(iBootcampRepository.findAllOrderByCapabilityCountAsc(10, 0L))
-                .thenReturn(Flux.just(entity));
-
-        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
-                .thenReturn(Flux.just(capabilityEntity));
-
-        when(bootcampEntityMapper.toDomain(entity))
-                .thenReturn(bootcamp);
-
-        when(iBootcampRepository.countAllBootcamps())
-                .thenReturn(Mono.just(1L));
-
-        StepVerifier.create(
-                        bootcampPersistenceAdapter.findAll(
-                                0, 10, "numbercapabilities", "asc"
-                        )
-                )
-                .assertNext(result -> {
-                    assertEquals(1, result.content().size());
-                    assertEquals(1L, result.content().getFirst().getId());
-                    assertEquals("Bootcamp Backend",
-                            result.content().getFirst().getName());
-                    assertEquals(
-                            List.of(Capability.builder().id(10L).build()),
-                            result.content().getFirst().getCapabilities()
-                    );
-                })
-                .verifyComplete();
-
-        verify(iBootcampRepository)
-                .findAllOrderByCapabilityCountAsc(10, 0L);
-    }
-
-    @Test
-    void shouldFindAllBootcampsOrderByNumberCapabilitiesDesc() {
-
-        BootcampEntity entity = BootcampEntity.builder()
-                .id(1L)
-                .name("Bootcamp Backend")
-                .description("Backend")
-                .status(true)
-                .build();
-
-        Bootcamp bootcamp = Bootcamp.builder()
-                .id(1L)
-                .name("Bootcamp Backend")
-                .description("Backend")
-                .status(true)
-                .build();
-
-        BootcampCapabilityEntity capabilityEntity = BootcampCapabilityEntity.builder()
-                .bootcampId(1L)
-                .capabilityId(10L)
-                .status(true)
-                .build();
-
-        when(iBootcampRepository.findAllOrderByCapabilityCountDesc(10, 0L))
-                .thenReturn(Flux.just(entity));
-
-        when(iBootcampCapabilityRepository.findAllByBootcampId(1L))
-                .thenReturn(Flux.just(capabilityEntity));
-
-        when(bootcampEntityMapper.toDomain(entity))
-                .thenReturn(bootcamp);
-
-        when(iBootcampRepository.countAllBootcamps())
-                .thenReturn(Mono.just(1L));
-
-        StepVerifier.create(
-                        bootcampPersistenceAdapter.findAll(
-                                0, 10, "numbercapabilities", "desc"
-                        )
-                )
-                .assertNext(result -> {
-                    assertEquals(1, result.content().size());
-                    assertEquals(1L, result.content().getFirst().getId());
-                    assertEquals("Bootcamp Backend",
-                            result.content().getFirst().getName());
-                    assertEquals(
-                            List.of(Capability.builder().id(10L).build()),
-                            result.content().getFirst().getCapabilities()
-                    );
-                })
-                .verifyComplete();
-
-        verify(iBootcampRepository)
-                .findAllOrderByCapabilityCountDesc(10, 0L);
+        verify(iBootcampRepository).findActiveById(bootcampId);
     }
 }

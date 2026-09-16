@@ -107,6 +107,13 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
     }
 
     @Override
+    public Mono<Bootcamp> findActiveById(Long bootcampId) {
+        return iBootcampRepository.findActiveById(bootcampId)
+                .map(bootcampEntityMapper::toDomain);
+    }
+
+
+    @Override
     public Mono<Boolean> areResourcesUsedByOtherBootcamps(List<Long> capabilityIds, Long bootcampId) {
         return Mono.zip(
                 iBootcampRepository.countCapabilityUsageByOtherBootcamps(capabilityIds, bootcampId),
