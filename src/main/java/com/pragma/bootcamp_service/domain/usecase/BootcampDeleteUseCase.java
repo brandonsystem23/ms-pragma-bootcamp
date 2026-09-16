@@ -49,9 +49,9 @@ public class BootcampDeleteUseCase implements IBootcampDeleteServicePort {
                                     })
                     );
 
-        }).onErrorMap(throwable -> {
-            if (throwable instanceof DomainException) {
-                return throwable;
+        }).onErrorMap(error -> {
+            if (error instanceof DomainException) {
+                return error;
             }
 
             return new DomainException(
