@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -179,14 +180,14 @@ class BootcampPersistenceAdapterTest {
     @Test
     void shouldReturnIfResourcesAreUsedByOtherBootcamps() {
 
-        when(iBootcampRepository.countCapabilityUsageByOtherBootcamps(1L))
+        when(iBootcampRepository.countCapabilityUsageByOtherBootcamps(anyList(), anyLong()))
                 .thenReturn(Mono.just(1L));
 
-        when(iBootcampRepository.countTechnologyUsageByOtherBootcamps(1L))
+        when(iBootcampRepository.countTechnologyUsageByOtherBootcamps(anyList(), anyLong()))
                 .thenReturn(Mono.just(1L));
 
         StepVerifier.create(
-                        bootcampPersistenceAdapter.areResourcesUsedByOtherBootcamps(1L)
+                        bootcampPersistenceAdapter.areResourcesUsedByOtherBootcamps(List.of(1L,2L),1L)
                 )
                 .expectNext(true)
                 .verifyComplete();

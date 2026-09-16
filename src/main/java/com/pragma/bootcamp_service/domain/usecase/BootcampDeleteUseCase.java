@@ -21,57 +21,50 @@ public class BootcampDeleteUseCase implements IBootcampDeleteServicePort {
 
     @Override
     public Mono<Void> deleteById(Long bootcampId, String token) {
+
         return Mono.defer(() -> {
-                    if (bootcampId == null) {
-                        return Mono.error(new DomainException(
-                                DomainErrorCode.VALIDATION_ERROR,
-                                DomainErrorMessages.DELETE_ID_REQUIRED
-                        ));
-                    }
-                    return iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(bootcampId)
-                            .flatMap(usedByOthers -> {
-                                if (Boolean.TRUE.equals(usedByOthers)) {
-                                    return Mono.error(new DomainException(
-                                            DomainErrorCode.VALIDATION_ERROR,
-                                            DomainErrorMessages.RESOURCES_USED_BY_OTHER_BOOTCAMPS
-                                    ));
-                                }
 
-                                return iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId)
-                                        .flatMap(capabilityIds ->
-                                                executeLocalSoftDelete(bootcampId)
-                                                        .then(Mono.defer(() ->
-                                                                callRemoteDeleteCapabilities(bootcampId, capabilityIds,
-                                                                        token)))
-                                        );
-                            });
-                })
-                .onErrorMap(throwable -> {
-                    if (throwable instanceof DomainException) {
-                        return throwable;
-                    }
+            if (bootcampId == null) {
+                return Mono.error(new DomainException(
+                        DomainErrorCode.VALIDATION_ERROR,
+                        DomainErrorMessages.DELETE_ID_REQUIRED
+                ));
+            }
 
-                    return new DomainException(
-                            DomainErrorCode.INTERNAL_ERROR,
-                            DomainErrorMessages.BOOTCAMP_DELETE_ROLLBACK_ERROR
+            return iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId)
+                    .flatMap(capabilityIds ->
+                            iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(capabilityIds, bootcampId)
+                                    .flatMap(usedByOthers -> {
+                                        if (Boolean.TRUE.equals(usedByOthers)) {
+                                            return Mono.error(new DomainException(
+                                                    DomainErrorCode.VALIDATION_ERROR,
+                                                    DomainErrorMessages.RESOURCES_USED_BY_OTHER_BOOTCAMPS
+                                            ));
+                                        }
+
+                                        return updateBootcampStatus(bootcampId, false)
+                                                .then(Mono.defer(() ->
+                                                        callRemoteDeleteCapabilities(bootcampId, capabilityIds, token)
+                                                ));
+                                    })
                     );
-                });
-    }
 
-    private Mono<Void> executeLocalSoftDelete(Long bootcampId) {
-        return iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(bootcampId, false)
-                .then(iBootcampPersistencePort.updateBootcampStatusById(bootcampId, false))
-                .as(transactionalOperator::transactional);
+        }).onErrorMap(throwable -> {
+            if (throwable instanceof DomainException) {
+                return throwable;
+            }
+
+            return new DomainException(
+                    DomainErrorCode.INTERNAL_ERROR,
+                    DomainErrorMessages.BOOTCAMP_DELETE_ROLLBACK_ERROR
+            );
+        });
     }
 
     private Mono<Void> callRemoteDeleteCapabilities(Long bootcampId, List<Long> capabilityIds, String token) {
-        if (capabilityIds.isEmpty()) {
-            return Mono.empty();
-        }
-
         return iCapabilityWebClientPort.deleteByIds(capabilityIds, token)
                 .onErrorResume(throwable ->
-                        rollbackStatuses(bootcampId)
+                        updateBootcampStatus(bootcampId, true)
                                 .then(Mono.error(new DomainException(
                                         DomainErrorCode.INTERNAL_ERROR,
                                         DomainErrorMessages.BOOTCAMP_DELETE_ROLLBACK_ERROR
@@ -79,9 +72,9 @@ public class BootcampDeleteUseCase implements IBootcampDeleteServicePort {
                 );
     }
 
-    private Mono<Void> rollbackStatuses(Long bootcampId) {
-        return iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(bootcampId, true)
-                .then(iBootcampPersistencePort.updateBootcampStatusById(bootcampId, true))
+    private Mono<Void> updateBootcampStatus(Long bootcampId, boolean status) {
+        return iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(bootcampId, status)
+                .then(Mono.defer(() -> iBootcampPersistencePort.updateBootcampStatusById(bootcampId, status)))
                 .as(transactionalOperator::transactional);
     }
 }
