@@ -9,8 +9,12 @@ import com.pragma.bootcamp_service.domain.spi.ICapabilityWebClientPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.List;
+
+import static reactor.netty.http.HttpConnectionLiveness.log;
 
 @RequiredArgsConstructor
 public class BootcampDeleteUseCase implements IBootcampDeleteServicePort {
@@ -65,6 +69,20 @@ public class BootcampDeleteUseCase implements IBootcampDeleteServicePort {
         return iCapabilityWebClientPort.deleteByIds(capabilityIds, token)
                 .onErrorResume(throwable ->
                         updateBootcampStatus(bootcampId, true)
+                                .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(2))
+                                        .doBeforeRetry(retrySignal ->
+                                                log.warn("Falló el rollback para el bootcamp {}. Reintento #{} debido a: {}",
+                                                        bootcampId,
+                                                        retrySignal.totalRetries(),
+                                                        retrySignal.failure().getMessage()))
+                                )
+                                .onErrorResume(rollbackError -> {
+                                    log.error("El rollback falló definitivamente tras agotar los reintentos para el bootcamp {}", bootcampId, rollbackError);
+                                    return Mono.error(new DomainException(
+                                            DomainErrorCode.INTERNAL_ERROR,
+                                            DomainErrorMessages.ROLLBACK_ERROR
+                                    ));
+                                })
                                 .then(Mono.error(new DomainException(
                                         DomainErrorCode.INTERNAL_ERROR,
                                         DomainErrorMessages.BOOTCAMP_DELETE_ROLLBACK_ERROR
