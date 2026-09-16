@@ -27,6 +27,8 @@ public final class DomainErrorMessages {
             "Ocurrió un error durante el registro transaccional de bootcamp. Se realizó rollback de la operación";
     public static final String BOOTCAMP_DELETE_ROLLBACK_ERROR =
             "Ocurrió un error durante la eliminación transaccional de bootcamp. Se realizó rollback de la operación";
+    public static final String ROLLBACK_ERROR =
+            "Ocurrió un error durante el proceso rollback de la operacion delete bootcamp";
     public static final String BOOTCAMP_NOT_FOUND = "El bootcamp no existe o no se encuentra activo";
     public static final String PARTICIPANT_ALREADY_ENROLLED = "El participante ya se encuentra inscrito en este bootcamp";
     public static final String MAX_ACTIVE_BOOTCAMPS_REACHED = "El participante no puede estar inscrito en más de 5 bootcamps al tiempo";
