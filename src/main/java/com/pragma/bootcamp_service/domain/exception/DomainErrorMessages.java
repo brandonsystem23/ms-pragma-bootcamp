@@ -19,11 +19,16 @@ public final class DomainErrorMessages {
     public static final String INVALID_SIZE = "El parámetro size debe ser mayor a 0";
     public static final String INVALID_SORT_BY = "El parámetro sortBy solo permite: name, numberCapabilities";
     public static final String INVALID_DIRECTION = "El parámetro direction solo permite: asc, desc";
-    public static final String DELETE_ID_REQUIRED = "El id del bootcamp es obligatorio";
+    public static final String BOOTCAMP_ID_REQUIRED = "El id del bootcamp es obligatorio";
+    public static final String PARTICIPANT_ID_REQUIRED = "El id del participante es obligatorio";
     public static final String RESOURCES_USED_BY_OTHER_BOOTCAMPS =
             "No se puede eliminar el bootcamp porque alguna capacidad o tecnología asociada está siendo usada en otro bootcamp";
     public static final String BOOTCAMP_SAVE_ROLLBACK_ERROR =
             "Ocurrió un error durante el registro transaccional de bootcamp. Se realizó rollback de la operación";
     public static final String BOOTCAMP_DELETE_ROLLBACK_ERROR =
             "Ocurrió un error durante la eliminación transaccional de bootcamp. Se realizó rollback de la operación";
+    public static final String BOOTCAMP_NOT_FOUND = "El bootcamp no existe o no se encuentra activo";
+    public static final String PARTICIPANT_ALREADY_ENROLLED = "El participante ya se encuentra inscrito en este bootcamp";
+    public static final String MAX_ACTIVE_BOOTCAMPS_REACHED = "El participante no puede estar inscrito en más de 5 bootcamps al tiempo";
+    public static final String BOOTCAMP_SCHEDULE_CONFLICT = "El participante ya tiene un bootcamp inscrito cuyo rango de fechas se cruza con el bootcamp solicitado";
 }

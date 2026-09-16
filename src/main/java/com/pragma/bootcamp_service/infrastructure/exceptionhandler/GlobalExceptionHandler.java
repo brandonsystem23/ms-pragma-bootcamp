@@ -60,7 +60,11 @@ public class GlobalExceptionHandler {
                  INVALID_PAGE,
                  INVALID_SIZE,
                  INVALID_SORT_BY,
-                 INVALID_DIRECTION -> HttpStatus.BAD_REQUEST;
+                 INVALID_DIRECTION,
+                 BOOTCAMP_NOT_FOUND,
+                 PARTICIPANT_ALREADY_ENROLLED,
+                 MAX_ACTIVE_BOOTCAMPS_REACHED,
+                 BOOTCAMP_SCHEDULE_CONFLICT -> HttpStatus.BAD_REQUEST;
 
             case INVALID_TOKEN -> HttpStatus.UNAUTHORIZED;
 

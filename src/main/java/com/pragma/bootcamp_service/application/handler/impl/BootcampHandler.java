@@ -1,13 +1,17 @@
 package com.pragma.bootcamp_service.application.handler.impl;
 
+import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
+import com.pragma.bootcamp_service.application.dto.response.BootcampEnrollmentResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
 import com.pragma.bootcamp_service.application.dto.response.PagedBootcampResponse;
 import com.pragma.bootcamp_service.application.handler.IBootcampHandler;
 import com.pragma.bootcamp_service.application.mapper.BootcampDtoMapper;
 import com.pragma.bootcamp_service.domain.api.IBootcampDeleteServicePort;
+import com.pragma.bootcamp_service.domain.api.IBootcampEnrollmentServicePort;
 import com.pragma.bootcamp_service.domain.api.IBootcampRegisterServicePort;
 import com.pragma.bootcamp_service.domain.api.IBootcampRetrieveServicePort;
+import com.pragma.bootcamp_service.domain.model.command.BootcampEnrollmentCommand;
 import com.pragma.bootcamp_service.domain.model.command.BootcampPageCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,9 +21,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class BootcampHandler implements IBootcampHandler {
 
+    private static final String MESSAGE = "Inscripción realizada exitosamente";
+
     private final IBootcampRegisterServicePort iBootcampRegisterServicePort;
     private final IBootcampRetrieveServicePort iBootcampRetrieveServicePort;
     private final IBootcampDeleteServicePort iBootcampDeleteServicePort;
+    private final IBootcampEnrollmentServicePort iBootcampEnrollmentServicePort;
     private final BootcampDtoMapper bootcampDtoMapper;
 
     @Override
@@ -55,5 +62,21 @@ public class BootcampHandler implements IBootcampHandler {
     @Override
     public Mono<Void> deleteById(Long id, String token) {
         return iBootcampDeleteServicePort.deleteById(id, token);
+    }
+
+    @Override
+    public Mono<BootcampEnrollmentResponse> enroll(BootcampEnrollmentRequest request, Long participantId) {
+        BootcampEnrollmentCommand command = new BootcampEnrollmentCommand(request.bootcampId(), participantId);
+
+        System.out.println("PARTICIPANTE ID " + participantId);
+
+        return iBootcampEnrollmentServicePort.enroll(command)
+                .thenReturn(
+                        BootcampEnrollmentResponse.builder()
+                                .bootcampId(request.bootcampId())
+                                .participantId(participantId)
+                                .message(MESSAGE)
+                                .build()
+                );
     }
 }

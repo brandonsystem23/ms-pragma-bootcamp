@@ -27,7 +27,7 @@ public class BootcampDeleteUseCase implements IBootcampDeleteServicePort {
             if (bootcampId == null) {
                 return Mono.error(new DomainException(
                         DomainErrorCode.VALIDATION_ERROR,
-                        DomainErrorMessages.DELETE_ID_REQUIRED
+                        DomainErrorMessages.BOOTCAMP_ID_REQUIRED
                 ));
             }
 

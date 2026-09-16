@@ -65,7 +65,7 @@ class BootcampDeleteUseCaseTest {
                 .expectErrorMatches(error ->
                         error instanceof DomainException &&
                                 ((DomainException) error).getCode() == DomainErrorCode.VALIDATION_ERROR &&
-                                error.getMessage().equals(DomainErrorMessages.DELETE_ID_REQUIRED))
+                                error.getMessage().equals(DomainErrorMessages.BOOTCAMP_ID_REQUIRED))
                 .verify();
     }
 

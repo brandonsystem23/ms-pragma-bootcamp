@@ -1,4 +1,4 @@
-package com.pragma.bootcamp_service.domain.validation.capability;
+package com.pragma.bootcamp_service.domain.validation.bootcamp;
 
 import com.pragma.bootcamp_service.domain.exception.DomainErrorCode;
 import com.pragma.bootcamp_service.domain.exception.DomainErrorMessages;
@@ -17,11 +17,7 @@ public class BootcampValidator {
     private final IBootcampPersistencePort iBootcampPersistencePort;
     private final ICapabilityWebClientPort iCapabilityWebClientPort;
 
-    public Mono<Void> validateBootcamp(
-            String name,
-            List<Long> capabilityIds,
-            String token
-    ) {
+    public Mono<Void> validateBootcamp(String name, List<Long> capabilityIds, String token) {
         return validateCapabilityUniqueness(name)
                 .then(Mono.defer(() -> validateTechnologies(capabilityIds, token)));
     }
@@ -33,8 +29,7 @@ public class BootcampValidator {
                                 ? Mono.error(new DomainException(
                                 DomainErrorCode.DUPLICATE_NAME,
                                 DomainErrorMessages.DUPLICATE_NAME
-                        ))
-                                : Mono.empty()
+                        )) : Mono.empty()
                 );
     }
 

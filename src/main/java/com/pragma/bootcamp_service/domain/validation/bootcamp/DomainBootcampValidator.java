@@ -1,4 +1,4 @@
-package com.pragma.bootcamp_service.domain.validation.capability;
+package com.pragma.bootcamp_service.domain.validation.bootcamp;
 
 
 import com.pragma.bootcamp_service.domain.exception.DomainErrorCode;

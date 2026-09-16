@@ -6,7 +6,7 @@ import com.pragma.bootcamp_service.domain.model.PagedResult;
 import com.pragma.bootcamp_service.domain.model.command.BootcampPageCommand;
 import com.pragma.bootcamp_service.domain.service.CapabilityDetailService;
 import com.pragma.bootcamp_service.domain.spi.IBootcampPersistencePort;
-import com.pragma.bootcamp_service.domain.validation.capability.DomainBootcampValidator;
+import com.pragma.bootcamp_service.domain.validation.bootcamp.DomainBootcampValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
