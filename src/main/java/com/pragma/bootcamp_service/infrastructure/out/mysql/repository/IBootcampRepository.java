@@ -7,6 +7,8 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 public interface IBootcampRepository extends ReactiveCrudRepository<BootcampEntity, Long> {
 
     @Query("""
@@ -80,40 +82,34 @@ public interface IBootcampRepository extends ReactiveCrudRepository<BootcampEnti
 
     @Query("""
     SELECT COUNT(*)
-    FROM bootcamp_capability bc1
-    INNER JOIN bootcamp_capability bc2
-        ON bc2.capability_id = bc1.capability_id
-    INNER JOIN bootcamp b2
-        ON b2.id = bc2.bootcamp_id
-    WHERE bc1.bootcamp_id = :bootcampId
-      AND bc1.status = TRUE
-      AND bc2.status = TRUE
-      AND b2.status = TRUE
-      AND bc2.bootcamp_id <> :bootcampId
+    FROM bootcamp_capability bc
+    INNER JOIN bootcamp b
+        ON b.id = bc.bootcamp_id
+    WHERE bc.capability_id IN (:capabilityIds)
+      AND bc.bootcamp_id <> :bootcampId
+      AND bc.status = TRUE
+      AND b.status = TRUE
     """)
-    Mono<Long> countCapabilityUsageByOtherBootcamps(Long bootcampId);
+    Mono<Long> countCapabilityUsageByOtherBootcamps(List<Long> capabilityIds, Long bootcampId);
 
 
     @Query("""
     SELECT COUNT(*)
-    FROM bootcamp_capability bc1
-    INNER JOIN capability_technology ct1
-        ON ct1.capability_id = bc1.capability_id
+    FROM capability_technology ct1
     INNER JOIN capability_technology ct2
         ON ct2.technology_id = ct1.technology_id
-    INNER JOIN bootcamp_capability bc2
-        ON bc2.capability_id = ct2.capability_id
-    INNER JOIN bootcamp b2
-        ON b2.id = bc2.bootcamp_id
-    WHERE bc1.bootcamp_id = :bootcampId
-      AND bc1.status = TRUE
+    INNER JOIN bootcamp_capability bc
+        ON bc.capability_id = ct2.capability_id
+    INNER JOIN bootcamp b
+        ON b.id = bc.bootcamp_id
+    WHERE ct1.capability_id IN (:capabilityIds)
       AND ct1.status = TRUE
       AND ct2.status = TRUE
-      AND bc2.status = TRUE
-      AND b2.status = TRUE
-      AND bc2.bootcamp_id <> :bootcampId
+      AND bc.status = TRUE
+      AND b.status = TRUE
+      AND bc.bootcamp_id <> :bootcampId
     """)
-    Mono<Long> countTechnologyUsageByOtherBootcamps(Long bootcampId);
+    Mono<Long> countTechnologyUsageByOtherBootcamps(List<Long> capabilityIds, Long bootcampId);
 
 
 

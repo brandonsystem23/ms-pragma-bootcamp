@@ -16,7 +16,7 @@ public interface IBootcampPersistencePort {
 
     Mono<List<Long>> findCapabilityIdsByBootcampId(Long bootcampId);
 
-    Mono<Boolean> areResourcesUsedByOtherBootcamps(Long bootcampId);
+    Mono<Boolean> areResourcesUsedByOtherBootcamps(List<Long> capabilityIds, Long bootcampId);
 
     Mono<Void> updateBootcampCapabilitiesStatusByBootcampId(Long bootcampId, Boolean status);
 

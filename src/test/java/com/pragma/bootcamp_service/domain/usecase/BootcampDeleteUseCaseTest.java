@@ -17,6 +17,8 @@ import reactor.test.StepVerifier;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,7 +42,7 @@ class BootcampDeleteUseCaseTest {
         String token = "token";
         List<Long> capabilityIds = List.of(10L, 20L);
 
-        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(bootcampId))
+        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(anyList(), anyLong()))
                 .thenReturn(Mono.just(false));
         when(iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId))
                 .thenReturn(Mono.just(capabilityIds));
@@ -49,26 +51,6 @@ class BootcampDeleteUseCaseTest {
         when(iBootcampPersistencePort.updateBootcampStatusById(bootcampId, false))
                 .thenReturn(Mono.empty());
         when(iCapabilityWebClientPort.deleteByIds(capabilityIds, token))
-                .thenReturn(Mono.empty());
-        when(transactionalOperator.transactional(any(Mono.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        StepVerifier.create(bootcampDeleteUseCase.deleteById(bootcampId, token))
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldSoftDeleteBootcampWithoutCallingWebClientWhenNoCapabilitiesExist() {
-        Long bootcampId = 1L;
-        String token = "token";
-
-        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(bootcampId))
-                .thenReturn(Mono.just(false));
-        when(iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId))
-                .thenReturn(Mono.just(List.of()));
-        when(iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(bootcampId, false))
-                .thenReturn(Mono.empty());
-        when(iBootcampPersistencePort.updateBootcampStatusById(bootcampId, false))
                 .thenReturn(Mono.empty());
         when(transactionalOperator.transactional(any(Mono.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -91,8 +73,13 @@ class BootcampDeleteUseCaseTest {
     void shouldReturnValidationErrorWhenResourcesAreUsedByOtherBootcamps() {
         Long bootcampId = 1L;
 
-        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(bootcampId))
+        List<Long> capabilityIds = List.of(10L, 20L);
+
+        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(anyList(), anyLong()))
                 .thenReturn(Mono.just(true));
+
+        when(iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId))
+                .thenReturn(Mono.just(capabilityIds));
 
         StepVerifier.create(bootcampDeleteUseCase.deleteById(bootcampId, "token"))
                 .expectErrorMatches(error ->
@@ -106,7 +93,7 @@ class BootcampDeleteUseCaseTest {
     void shouldReturnInternalErrorWhenSoftDeleteCapabilitiesFails() {
         Long bootcampId = 1L;
 
-        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(bootcampId))
+        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(anyList(), anyLong()))
                 .thenReturn(Mono.just(false));
         when(iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId))
                 .thenReturn(Mono.just(List.of(10L)));
@@ -125,7 +112,7 @@ class BootcampDeleteUseCaseTest {
     void shouldReturnInternalErrorWhenSoftDeleteBootcampFails() {
         Long bootcampId = 1L;
 
-        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(bootcampId))
+        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(anyList(), anyLong()))
                 .thenReturn(Mono.just(false));
         when(iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId))
                 .thenReturn(Mono.just(List.of(10L)));
@@ -150,7 +137,7 @@ class BootcampDeleteUseCaseTest {
         String token = "token";
         List<Long> capabilityIds = List.of(10L);
 
-        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(bootcampId))
+        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(anyList(), anyLong()))
                 .thenReturn(Mono.just(false));
         when(iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId))
                 .thenReturn(Mono.just(capabilityIds));

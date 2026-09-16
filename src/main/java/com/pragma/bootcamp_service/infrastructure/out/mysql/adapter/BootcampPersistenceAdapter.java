@@ -107,10 +107,10 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
     }
 
     @Override
-    public Mono<Boolean> areResourcesUsedByOtherBootcamps(Long bootcampId) {
+    public Mono<Boolean> areResourcesUsedByOtherBootcamps(List<Long> capabilityIds, Long bootcampId) {
         return Mono.zip(
-                iBootcampRepository.countCapabilityUsageByOtherBootcamps(bootcampId),
-                iBootcampRepository.countTechnologyUsageByOtherBootcamps(bootcampId)
+                iBootcampRepository.countCapabilityUsageByOtherBootcamps(capabilityIds, bootcampId),
+                iBootcampRepository.countTechnologyUsageByOtherBootcamps(capabilityIds, bootcampId)
         ).map(tuple ->
                 tuple.getT1() > 0 || tuple.getT2() > 0
         );
