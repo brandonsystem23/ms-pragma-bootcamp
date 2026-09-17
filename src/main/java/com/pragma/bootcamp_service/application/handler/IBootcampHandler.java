@@ -1,6 +1,7 @@
 package com.pragma.bootcamp_service.application.handler;
 
 import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
+import com.pragma.bootcamp_service.application.dto.request.BootcampFilterDto;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampEnrollmentResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
@@ -12,10 +13,7 @@ public interface IBootcampHandler {
     Mono<BootcampResponse> create(BootcampRequest request, String token);
 
     Mono<PagedBootcampResponse> getBootcamps(
-            int page,
-            int size,
-            String sortBy,
-            String direction,
+            BootcampFilterDto filter,
             String token
     );
 
