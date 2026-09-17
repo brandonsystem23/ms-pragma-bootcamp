@@ -1,6 +1,7 @@
 package com.pragma.bootcamp_service.infrastructure.input.rest;
 
 import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
+import com.pragma.bootcamp_service.application.dto.request.BootcampFilterDto;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampEnrollmentResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
@@ -43,16 +44,13 @@ public class BootcampController {
     @Operation(summary = "Listar bootcamps", description = "Listar bootcamps paginadas. Requiere rol ADMINISTRADOR")
     public Mono<PagedBootcampResponse> getBootcamps(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @ModelAttribute BootcampFilterDto filter
     ) {
         log.info("Solicitud para listar bootcamps");
 
         String token = UtilTokenExtractor.extract(authorizationHeader);
 
-        return iBootcampHandler.getBootcamps(page, size, sortBy, direction, token);
+        return iBootcampHandler.getBootcamps(filter, token);
     }
 
     @DeleteMapping("/delete/{id}")

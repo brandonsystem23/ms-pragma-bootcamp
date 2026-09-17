@@ -1,6 +1,7 @@
 package com.pragma.bootcamp_service.application.handler.impl;
 
 import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
+import com.pragma.bootcamp_service.application.dto.request.BootcampFilterDto;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampEnrollmentResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
@@ -37,8 +38,9 @@ public class BootcampHandler implements IBootcampHandler {
     }
 
     @Override
-    public Mono<PagedBootcampResponse> getBootcamps(int page, int size, String sortBy, String direction, String token) {
-        BootcampPageCommand command = new BootcampPageCommand(page, size, sortBy, direction);
+    public Mono<PagedBootcampResponse> getBootcamps(BootcampFilterDto filter, String token) {
+
+        BootcampPageCommand command = bootcampDtoMapper.toCommandPage(filter);
 
         return iBootcampRetrieveServicePort
                 .getBootcamps(command, token)
@@ -67,8 +69,6 @@ public class BootcampHandler implements IBootcampHandler {
     @Override
     public Mono<BootcampEnrollmentResponse> enroll(BootcampEnrollmentRequest request, Long participantId) {
         BootcampEnrollmentCommand command = new BootcampEnrollmentCommand(request.bootcampId(), participantId);
-
-        System.out.println("PARTICIPANTE ID " + participantId);
 
         return iBootcampEnrollmentServicePort.enroll(command)
                 .thenReturn(

@@ -1,6 +1,7 @@
 package com.pragma.bootcamp_service.infrastructure.input.rest;
 
 import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
+import com.pragma.bootcamp_service.application.dto.request.BootcampFilterDto;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampEnrollmentResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
@@ -145,8 +146,6 @@ class BootcampControllerTest {
 
         int page = 0;
         int size = 10;
-        String sortBy = "name";
-        String direction = "asc";
 
         PagedBootcampResponse response = PagedBootcampResponse.builder()
                 .content(List.of())
@@ -158,21 +157,22 @@ class BootcampControllerTest {
                 .last(true)
                 .build();
 
+        BootcampFilterDto bootcampFilterDto = new BootcampFilterDto(0, 10, "name", "asc");
+
         when(iBootcampHandler.getBootcamps(
-                page,
-                size,
-                sortBy,
-                direction,
+                bootcampFilterDto,
                 token
         )).thenReturn(Mono.just(response));
+
+
+
+        when(iBootcampHandler.getBootcamps(bootcampFilterDto, token))
+                .thenReturn(Mono.just(response));
 
         StepVerifier.create(
                         bootcampController.getBootcamps(
                                 authorizationHeader,
-                                page,
-                                size,
-                                sortBy,
-                                direction
+                                bootcampFilterDto
                         )
                 )
                 .expectNext(response)

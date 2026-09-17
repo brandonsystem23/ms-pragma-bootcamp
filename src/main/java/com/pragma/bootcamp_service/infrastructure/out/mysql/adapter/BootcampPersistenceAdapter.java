@@ -2,6 +2,7 @@ package com.pragma.bootcamp_service.infrastructure.out.mysql.adapter;
 
 import com.pragma.bootcamp_service.domain.model.Bootcamp;
 import com.pragma.bootcamp_service.domain.model.Capability;
+import com.pragma.bootcamp_service.domain.model.FilterValues;
 import com.pragma.bootcamp_service.domain.model.PagedResult;
 import com.pragma.bootcamp_service.domain.spi.IBootcampPersistencePort;
 import com.pragma.bootcamp_service.infrastructure.out.mysql.entity.BootcampCapabilityEntity;
@@ -49,11 +50,11 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
         long offset = (long) page * size;
 
         Flux<BootcampEntity> bootcamps = switch (sortBy.toLowerCase()) {
-            case "name" -> "desc".equalsIgnoreCase(direction)
+            case FilterValues.NAME -> FilterValues.DESCENDING.equalsIgnoreCase(direction)
                     ? iBootcampRepository.findAllOrderByNameDesc(size, offset)
                     : iBootcampRepository.findAllOrderByNameAsc(size, offset);
 
-            case "numbercapabilities" -> "desc".equalsIgnoreCase(direction)
+            case FilterValues.NUMBER_CAPABILITIES -> FilterValues.DESCENDING.equalsIgnoreCase(direction)
                     ? iBootcampRepository.findAllOrderByCapabilityCountDesc(size, offset)
                     : iBootcampRepository.findAllOrderByCapabilityCountAsc(size, offset);
 
@@ -119,8 +120,12 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
                 iBootcampRepository.countCapabilityUsageByOtherBootcamps(capabilityIds, bootcampId),
                 iBootcampRepository.countTechnologyUsageByOtherBootcamps(capabilityIds, bootcampId)
         ).map(tuple ->
-                tuple.getT1() > 0 || tuple.getT2() > 0
+                isPositive(tuple.getT1()) || isPositive(tuple.getT2())
         );
+    }
+
+    private boolean isPositive(Long num) {
+        return num > 0;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.pragma.bootcamp_service.application.handler.impl;
 
 import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
+import com.pragma.bootcamp_service.application.dto.request.BootcampFilterDto;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampListItemResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
@@ -30,6 +31,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -208,6 +210,10 @@ class BootcampHandlerTest {
                 true
         );
 
+        BootcampFilterDto bootcampFilterDto = new BootcampFilterDto(0, 10, "name", "asc");
+
+        when(bootcampDtoMapper.toCommandPage(any())).thenReturn(command);
+
         when(iBootcampRetrieveServicePort.getBootcamps(
                 command,
                 token
@@ -218,10 +224,7 @@ class BootcampHandlerTest {
 
         StepVerifier.create(
                         bootcampHandler.getBootcamps(
-                                page,
-                                size,
-                                sortBy,
-                                direction,
+                                bootcampFilterDto,
                                 token
                         )
                 )
@@ -309,17 +312,18 @@ class BootcampHandlerTest {
         RuntimeException exception =
                 new RuntimeException("error obteniendo bootcamps");
 
+        BootcampFilterDto bootcampFilterDto = new BootcampFilterDto(0, 10, "name", "asc");
+
         when(iBootcampRetrieveServicePort.getBootcamps(
                 command,
                 token
         )).thenReturn(Mono.error(exception));
 
+        when(bootcampDtoMapper.toCommandPage(any())).thenReturn(command);
+
         StepVerifier.create(
                         bootcampHandler.getBootcamps(
-                                page,
-                                size,
-                                sortBy,
-                                direction,
+                                bootcampFilterDto,
                                 token
                         )
                 )

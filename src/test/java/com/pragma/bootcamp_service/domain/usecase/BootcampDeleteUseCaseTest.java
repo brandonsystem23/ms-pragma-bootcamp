@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -159,6 +160,156 @@ class BootcampDeleteUseCaseTest {
                         error instanceof DomainException &&
                                 ((DomainException) error).getCode() == DomainErrorCode.INTERNAL_ERROR &&
                                 error.getMessage().equals(DomainErrorMessages.BOOTCAMP_DELETE_ROLLBACK_ERROR))
+                .verify();
+    }
+
+    @Test
+    void shouldRetryRollbackWhenRollbackFails() {
+        Long bootcampId = 1L;
+        List<Long> capabilityIds = List.of(10L);
+        String token = "token";
+
+        when(iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId))
+                .thenReturn(Mono.just(capabilityIds));
+
+        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(
+                capabilityIds, bootcampId))
+                .thenReturn(Mono.just(false));
+
+        when(iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(
+                bootcampId, false))
+                .thenReturn(Mono.empty());
+
+        when(iBootcampPersistencePort.updateBootcampStatusById(
+                bootcampId, false))
+                .thenReturn(Mono.empty());
+
+        when(iCapabilityWebClientPort.deleteByIds(
+                capabilityIds, token))
+                .thenReturn(Mono.error(new RuntimeException("Error remoto")));
+
+        AtomicInteger rollbackAttempts = new AtomicInteger();
+
+        when(iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(
+                bootcampId, true))
+                .thenReturn(
+                        Mono.defer(() -> {
+                            if (rollbackAttempts.getAndIncrement() == 0) {
+                                return Mono.error(
+                                        new RuntimeException("Error rollback")
+                                );
+                            }
+
+                            return Mono.empty();
+                        })
+                );
+
+        when(iBootcampPersistencePort.updateBootcampStatusById(
+                bootcampId, true))
+                .thenReturn(Mono.empty());
+
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        StepVerifier.create(
+                        bootcampDeleteUseCase.deleteById(bootcampId, token)
+                )
+                .expectErrorMatches(error ->
+                        error instanceof DomainException &&
+                                ((DomainException) error).getCode()
+                                        == DomainErrorCode.INTERNAL_ERROR &&
+                                error.getMessage().equals(
+                                        DomainErrorMessages.BOOTCAMP_DELETE_ROLLBACK_ERROR
+                                )
+                )
+                .verify();
+
+    }
+
+    @Test
+    void shouldReturnRollbackErrorAfterExhaustingRetries() {
+        Long bootcampId = 1L;
+        List<Long> capabilityIds = List.of(10L);
+        String token = "token";
+
+        when(iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId))
+                .thenReturn(Mono.just(capabilityIds));
+
+        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(
+                capabilityIds, bootcampId))
+                .thenReturn(Mono.just(false));
+
+        when(iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(
+                bootcampId, false))
+                .thenReturn(Mono.empty());
+
+        when(iBootcampPersistencePort.updateBootcampStatusById(
+                bootcampId, false))
+                .thenReturn(Mono.empty());
+
+        when(iCapabilityWebClientPort.deleteByIds(
+                capabilityIds, token))
+                .thenReturn(Mono.error(new RuntimeException("Error remoto")));
+
+        when(iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(
+                bootcampId, true))
+                .thenReturn(
+                        Mono.error(new RuntimeException("Error rollback"))
+                );
+
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        StepVerifier.create(
+                        bootcampDeleteUseCase.deleteById(bootcampId, token)
+                )
+                .expectErrorMatches(error ->
+                        error instanceof DomainException &&
+                                ((DomainException) error).getCode()
+                                        == DomainErrorCode.INTERNAL_ERROR &&
+                                error.getMessage().equals(
+                                        DomainErrorMessages.ROLLBACK_ERROR
+                                )
+                )
+                .verify();
+    }
+
+    @Test
+    void shouldReturnRollbackErrorWhenRollbackFailsAfterAllRetries() {
+        Long bootcampId = 1L;
+        String token = "token";
+        List<Long> capabilityIds = List.of(10L);
+
+        when(iBootcampPersistencePort.areResourcesUsedByOtherBootcamps(anyList(), anyLong()))
+                .thenReturn(Mono.just(false));
+
+        when(iBootcampPersistencePort.findCapabilityIdsByBootcampId(bootcampId))
+                .thenReturn(Mono.just(capabilityIds));
+
+        when(iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(bootcampId, false))
+                .thenReturn(Mono.empty());
+
+        when(iBootcampPersistencePort.updateBootcampStatusById(bootcampId, false))
+                .thenReturn(Mono.empty());
+
+        when(iCapabilityWebClientPort.deleteByIds(capabilityIds, token))
+                .thenReturn(Mono.error(new RuntimeException("Error remoto")));
+
+        when(iBootcampPersistencePort.updateBootcampCapabilitiesStatusByBootcampId(bootcampId, true))
+                .thenReturn(Mono.error(new RuntimeException("Error rollback")));
+
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        StepVerifier.create(
+                        bootcampDeleteUseCase.deleteById(bootcampId, token)
+                )
+                .expectErrorMatches(error ->
+                        error instanceof DomainException &&
+                                ((DomainException) error).getCode() == DomainErrorCode.INTERNAL_ERROR &&
+                                error.getMessage().equals(
+                                        DomainErrorMessages.ROLLBACK_ERROR
+                                ))
                 .verify();
     }
 }
