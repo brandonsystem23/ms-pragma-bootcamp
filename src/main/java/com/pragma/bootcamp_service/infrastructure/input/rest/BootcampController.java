@@ -3,6 +3,7 @@ package com.pragma.bootcamp_service.infrastructure.input.rest;
 import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
 import com.pragma.bootcamp_service.application.dto.request.BootcampFilterDto;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
+import com.pragma.bootcamp_service.application.dto.request.ParticipantBootcampHistoryRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampEnrollmentResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
 import com.pragma.bootcamp_service.application.dto.response.PagedBootcampResponse;
@@ -69,13 +70,18 @@ public class BootcampController {
     @PostMapping("/enroll")
     @Operation(summary = "Inscribirme a bootcamp", description = "Permite a un usuario con rol PARTICIPANTE inscribirse a un bootcamp")
     public Mono<BootcampEnrollmentResponse> enrollToBootcamp(
-            @RequestBody BootcampEnrollmentRequest request,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            @RequestBody BootcampEnrollmentRequest bootcampEnrollmentRequest,
             Authentication authentication
     ) {
         log.info("Solicitud para inscribirse a bootcamp");
 
+        String token = UtilTokenExtractor.extract(authorizationHeader);
         AuthenticatedUser authenticatedUser = (AuthenticatedUser) authentication.getPrincipal();
 
-        return iBootcampHandler.enroll(request, authenticatedUser.userId());
+
+
+        return iBootcampHandler.enroll(bootcampEnrollmentRequest, authenticatedUser.userId(),
+                authenticatedUser.fullName(), authenticatedUser.email(), token);
     }
 }

@@ -33,4 +33,6 @@ public final class DomainErrorMessages {
     public static final String PARTICIPANT_ALREADY_ENROLLED = "El participante ya se encuentra inscrito en este bootcamp";
     public static final String MAX_ACTIVE_BOOTCAMPS_REACHED = "El participante no puede estar inscrito en más de 5 bootcamps al tiempo";
     public static final String BOOTCAMP_SCHEDULE_CONFLICT = "El participante ya tiene un bootcamp inscrito cuyo rango de fechas se cruza con el bootcamp solicitado";
+    public static final String BOOTCAMP_HISTORY_SAVE_ERROR = "El bootcamp se registro correctamente pero no se pudo registrar el bootcamp history";
+    public static final String BOOTCAMP_HISTORY_UPDATE_ERROR = "El bootcamp se actualizo correctamente pero no se pudo actualizar el bootcamp history";
 }

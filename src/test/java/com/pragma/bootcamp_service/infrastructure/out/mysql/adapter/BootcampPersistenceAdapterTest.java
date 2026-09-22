@@ -121,7 +121,7 @@ class BootcampPersistenceAdapterTest {
     void shouldCheckIfBootcampExistsByName() {
         String name = "Desarrollo Backend";
 
-        when(iBootcampRepository.existsByName(name)).thenReturn(Mono.just(true));
+        when(iBootcampRepository.existsByName(name)).thenReturn(Mono.just(1L));
 
         StepVerifier.create(bootcampPersistenceAdapter.existsByName(name))
                 .expectNext(true)

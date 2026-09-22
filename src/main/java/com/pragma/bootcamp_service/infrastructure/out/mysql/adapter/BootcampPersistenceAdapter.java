@@ -41,7 +41,8 @@ public class BootcampPersistenceAdapter implements IBootcampPersistencePort {
 
     @Override
     public Mono<Boolean> existsByName(String name) {
-        return iBootcampRepository.existsByName(name);
+        return iBootcampRepository.existsByName(name)
+                .map(count -> count > 0);
     }
 
     @Override

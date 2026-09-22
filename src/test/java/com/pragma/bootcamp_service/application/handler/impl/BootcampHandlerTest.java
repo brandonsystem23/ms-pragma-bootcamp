@@ -369,6 +369,9 @@ class BootcampHandlerTest {
 
         Long bootcampId = 1L;
         Long participantId = 10L;
+        String fullName = "Juan Perez";
+        String email = "juan@test.com";
+        String token = "token";
 
         BootcampEnrollmentRequest request =
                 new BootcampEnrollmentRequest(bootcampId);
@@ -376,11 +379,11 @@ class BootcampHandlerTest {
         BootcampEnrollmentCommand command =
                 new BootcampEnrollmentCommand(bootcampId, participantId);
 
-        when(iBootcampEnrollmentServicePort.enroll(command))
+        when(iBootcampEnrollmentServicePort.enroll(command, fullName, email, token))
                 .thenReturn(Mono.empty());
 
         StepVerifier.create(
-                        bootcampHandler.enroll(request, participantId)
+                        bootcampHandler.enroll(request, participantId, fullName, email, token)
                 )
                 .assertNext(response -> {
                     assertEquals(bootcampId, response.bootcampId());
@@ -398,6 +401,9 @@ class BootcampHandlerTest {
 
         Long bootcampId = 1L;
         Long participantId = 10L;
+        String fullName = "Juan Perez";
+        String email = "juan@test.com";
+        String token = "token";
 
         BootcampEnrollmentRequest request =
                 new BootcampEnrollmentRequest(bootcampId);
@@ -408,11 +414,11 @@ class BootcampHandlerTest {
         RuntimeException exception =
                 new RuntimeException("error realizando inscripción");
 
-        when(iBootcampEnrollmentServicePort.enroll(command))
+        when(iBootcampEnrollmentServicePort.enroll(command, fullName, email, token))
                 .thenReturn(Mono.error(exception));
 
         StepVerifier.create(
-                        bootcampHandler.enroll(request, participantId)
+                        bootcampHandler.enroll(request, participantId, fullName, email, token)
                 )
                 .expectErrorMatches(error ->
                         error instanceof RuntimeException &&

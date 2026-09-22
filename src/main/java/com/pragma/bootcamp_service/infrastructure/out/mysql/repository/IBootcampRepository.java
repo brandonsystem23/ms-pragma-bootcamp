@@ -12,14 +12,12 @@ import java.util.List;
 public interface IBootcampRepository extends ReactiveCrudRepository<BootcampEntity, Long> {
 
     @Query("""
-        SELECT EXISTS(
-            SELECT 1
-            FROM bootcamp
-            WHERE name = :name
-              AND status = true
-        )
-        """)
-    Mono<Boolean> existsByName(String name);
+    SELECT COUNT(*)
+    FROM bootcamp
+    WHERE name = :name
+      AND status = true
+    """)
+    Mono<Long> existsByName(String name);
 
     @Query("""
             SELECT b.id, b.name, b.description, b.launch_date, b.duration_day, b.status
