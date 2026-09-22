@@ -67,10 +67,14 @@ public class BootcampHandler implements IBootcampHandler {
     }
 
     @Override
-    public Mono<BootcampEnrollmentResponse> enroll(BootcampEnrollmentRequest request, Long participantId) {
+    public Mono<BootcampEnrollmentResponse> enroll(BootcampEnrollmentRequest request, Long participantId,
+                                                   String fullName,
+                                                   String email,
+                                                   String token
+    ) {
         BootcampEnrollmentCommand command = new BootcampEnrollmentCommand(request.bootcampId(), participantId);
 
-        return iBootcampEnrollmentServicePort.enroll(command)
+        return iBootcampEnrollmentServicePort.enroll(command, fullName, email, token)
                 .thenReturn(
                         BootcampEnrollmentResponse.builder()
                                 .bootcampId(request.bootcampId())

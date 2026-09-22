@@ -164,11 +164,6 @@ class BootcampControllerTest {
                 token
         )).thenReturn(Mono.just(response));
 
-
-
-        when(iBootcampHandler.getBootcamps(bootcampFilterDto, token))
-                .thenReturn(Mono.just(response));
-
         StepVerifier.create(
                         bootcampController.getBootcamps(
                                 authorizationHeader,
@@ -212,28 +207,35 @@ class BootcampControllerTest {
     @Test
     void shouldEnrollToBootcampSuccessfully() {
 
-        BootcampEnrollmentRequest request = new BootcampEnrollmentRequest(
-                1L
-        );
+        String authorizationHeader = "Bearer token";
+        String token = "token";
+
+        BootcampEnrollmentRequest request = new BootcampEnrollmentRequest(1L);
 
         BootcampEnrollmentResponse response = BootcampEnrollmentResponse.builder()
                 .bootcampId(1L)
                 .participantId(10L)
+                .message("Inscripción realizada exitosamente")
                 .build();
 
         Long participantId = 10L;
+        String fullName = "Juan Perez";
+        String email = "juan@test.com";
 
         Authentication authentication = mock(Authentication.class);
         AuthenticatedUser authenticatedUser = mock(AuthenticatedUser.class);
 
         when(authentication.getPrincipal()).thenReturn(authenticatedUser);
         when(authenticatedUser.userId()).thenReturn(participantId);
+        when(authenticatedUser.fullName()).thenReturn(fullName);
+        when(authenticatedUser.email()).thenReturn(email);
 
-        when(iBootcampHandler.enroll(request, participantId))
+        when(iBootcampHandler.enroll(request, participantId, fullName, email, token))
                 .thenReturn(Mono.just(response));
 
         StepVerifier.create(
                         bootcampController.enrollToBootcamp(
+                                authorizationHeader,
                                 request,
                                 authentication
                         )
@@ -245,24 +247,32 @@ class BootcampControllerTest {
     @Test
     void shouldPropagateErrorWhenEnrollFails() {
 
+        String authorizationHeader = "Bearer token";
+        String token = "token";
+
         BootcampEnrollmentRequest request = new BootcampEnrollmentRequest(1L);
 
         Long participantId = 10L;
+        String fullName = "Juan Perez";
+        String email = "juan@test.com";
 
         Authentication authentication = mock(Authentication.class);
         AuthenticatedUser authenticatedUser = mock(AuthenticatedUser.class);
 
         when(authentication.getPrincipal()).thenReturn(authenticatedUser);
         when(authenticatedUser.userId()).thenReturn(participantId);
+        when(authenticatedUser.fullName()).thenReturn(fullName);
+        when(authenticatedUser.email()).thenReturn(email);
 
         RuntimeException exception =
                 new RuntimeException("error inscribiendo al participante");
 
-        when(iBootcampHandler.enroll(request, participantId))
+        when(iBootcampHandler.enroll(request, participantId, fullName, email, token))
                 .thenReturn(Mono.error(exception));
 
         StepVerifier.create(
                         bootcampController.enrollToBootcamp(
+                                authorizationHeader,
                                 request,
                                 authentication
                         )

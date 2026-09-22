@@ -97,8 +97,7 @@ public class CapabilityWebClientAdapter implements ICapabilityWebClientPort {
                         HttpStatusCode::is5xxServerError,
                         this::handleServerError
                 )
-                .bodyToMono(Void.class)
-                .retry(2);
+                .bodyToMono(Void.class);
     }
 
     private static WebClient.ResponseSpec getClientPath(

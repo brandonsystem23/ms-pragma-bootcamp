@@ -19,5 +19,11 @@ public interface IBootcampHandler {
 
     Mono<Void> deleteById(Long id, String token);
 
-    Mono<BootcampEnrollmentResponse> enroll(BootcampEnrollmentRequest request, Long participantId);
+    Mono<BootcampEnrollmentResponse> enroll(
+            BootcampEnrollmentRequest request,
+            Long participantId,
+            String fullName,
+            String email,
+            String token
+    );
 }

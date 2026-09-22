@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface IBootcampEnrollmentServicePort {
 
-    Mono<Void> enroll(BootcampEnrollmentCommand command);
+    Mono<Void> enroll(BootcampEnrollmentCommand command, String fullName, String email, String token);
 }

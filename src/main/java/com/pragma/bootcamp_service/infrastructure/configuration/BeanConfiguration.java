@@ -8,6 +8,7 @@ import com.pragma.bootcamp_service.domain.service.CapabilityDetailService;
 import com.pragma.bootcamp_service.domain.spi.IBootcampParticipantPersistencePort;
 import com.pragma.bootcamp_service.domain.spi.IBootcampPersistencePort;
 import com.pragma.bootcamp_service.domain.spi.ICapabilityWebClientPort;
+import com.pragma.bootcamp_service.domain.spi.IReportWebClientPort;
 import com.pragma.bootcamp_service.domain.usecase.BootcampDeleteUseCase;
 import com.pragma.bootcamp_service.domain.usecase.BootcampEnrollmentUseCase;
 import com.pragma.bootcamp_service.domain.usecase.BootcampRegisterUseCase;
@@ -47,15 +48,19 @@ public class BeanConfiguration {
     @Bean
     public IBootcampRegisterServicePort bootcampRegisterUseCase(
             IBootcampPersistencePort iBootcampPersistencePort,
+            IReportWebClientPort iReportWebClientPort,
             DomainBootcampValidator domainBootcampValidator,
             BootcampValidator bootcampValidator,
+            CapabilityDetailService capabilityDetailService,
             TransactionalOperator transactionalOperator
 
     ) {
         return new BootcampRegisterUseCase(
                 iBootcampPersistencePort,
+                iReportWebClientPort,
                 domainBootcampValidator,
                 bootcampValidator,
+                capabilityDetailService,
                 transactionalOperator
         );
     }
@@ -90,10 +95,12 @@ public class BeanConfiguration {
     @Bean
     public IBootcampEnrollmentServicePort bootcampEnrollmentUseCase(
             IBootcampParticipantPersistencePort iBootcampParticipantPersistencePort,
+            IReportWebClientPort iReportWebClientPort,
             BootcampEnrollmentValidator bootcampEnrollmentValidator
     ) {
         return new BootcampEnrollmentUseCase(
                 iBootcampParticipantPersistencePort,
+                iReportWebClientPort,
                 bootcampEnrollmentValidator
         );
     }

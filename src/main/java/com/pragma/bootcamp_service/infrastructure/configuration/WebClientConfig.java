@@ -18,4 +18,13 @@ public class WebClientConfig {
                 .build();
     }
 
+    @Bean(name = "reportWebClient")
+    public WebClient reportWebClient(
+            WebClient.Builder builder,
+            @Value("${clients.report.base-url}") String reportBaseUrl
+    ) {
+        return builder
+                .baseUrl(reportBaseUrl)
+                .build();
+    }
 }
