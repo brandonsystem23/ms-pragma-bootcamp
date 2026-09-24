@@ -3,7 +3,6 @@ package com.pragma.bootcamp_service.infrastructure.input.rest;
 import com.pragma.bootcamp_service.application.dto.request.BootcampEnrollmentRequest;
 import com.pragma.bootcamp_service.application.dto.request.BootcampFilterDto;
 import com.pragma.bootcamp_service.application.dto.request.BootcampRequest;
-import com.pragma.bootcamp_service.application.dto.request.ParticipantBootcampHistoryRequest;
 import com.pragma.bootcamp_service.application.dto.response.BootcampEnrollmentResponse;
 import com.pragma.bootcamp_service.application.dto.response.BootcampResponse;
 import com.pragma.bootcamp_service.application.dto.response.PagedBootcampResponse;
